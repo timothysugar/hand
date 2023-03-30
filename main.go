@@ -45,6 +45,7 @@ func (h *Hand) winner() *player {
 	return nil
 }
 
-func newHand(p []player) *Hand {
-	return &Hand{ players:  p }
+func newHand(ps []player) (*Hand, error) {
+	if (len(ps) <= 1) { return nil, errors.New("hand requires at least 2 players") }
+	return &Hand{ players:  ps }, nil
 }

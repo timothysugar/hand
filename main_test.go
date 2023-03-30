@@ -17,7 +17,7 @@ func TestPlayerOfManyFolds(t *testing.T) {
 	p2 := newPlayer()
 	p3 := newPlayer()
 	players := []player{ p1, p2, p3 }
-	h := newHand(players)
+	h, _ := newHand(players)
 
 	result, err := h.fold(p1)
 	
@@ -31,7 +31,7 @@ func TestPenultimatePlayerFolds(t *testing.T) {
 	p1 := newPlayer()
 	p2 := newPlayer()
 	players := []player{ p1, p2 }
-	h := newHand(players)
+	h, _ := newHand(players)
 
 	result, err := h.fold(p1)
 	
@@ -43,12 +43,21 @@ func TestPenultimatePlayerFolds(t *testing.T) {
 }
 
 func TestFinalPlayerCannotFold(t *testing.T) {
-	p := newPlayer()
-	players := []player{ p }
-	h := newHand(players)
+	p1 := newPlayer()
+	p2 := newPlayer()
+	players := []player{ p1, p2 }
+	h, _ := newHand(players)
 
-	_, err := h.fold(p)
+	h.fold(p1)
+	_, err := h.fold(p2)
 
 	if (err == nil) { t.Errorf("Last player folding should return error but did not; err: %v", err)}
-	checkPlayers(t, h.players, p)
+}
+
+func TestHandRequiresTwoPlayers(t *testing.T) {
+	players := []player{ newPlayer() }
+
+	_, err := newHand(players)
+
+	if (err == nil) { t.Error("New hand with less than one player should return error but did not")}
 }
