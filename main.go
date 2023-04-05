@@ -12,8 +12,8 @@ type player struct {
 }
 
 
-func newPlayer(chips int) player {
-	return player{
+func newPlayer(chips int) *player {
+	return &player{
 		id: xid.New(),
 		chips: chips,
 	}
@@ -49,13 +49,12 @@ func (p pot) required(pl player) int {
 }
 
 type Hand struct {
-	players []player
+	players []*player
 	pot	pot
-	smallBlind int
-	bigBlind int
+	blinds map[*player]int
 }
 
-func (h *Hand) fold(p player) ([]player, error) {
+func (h *Hand) fold(p *player) ([]*player, error) {
 	if (len(h.players) == 1) { return nil, errors.New("final player cannot fold") }
 
 	var idx int
@@ -65,7 +64,7 @@ func (h *Hand) fold(p player) ([]player, error) {
 			break
 		}
 	}
-	ret := make([]player, len(h.players) - 1)
+	ret := make([]*player, len(h.players) - 1)
 	copy(ret[:idx], h.players[:idx])
 	copy(ret[idx:], h.players[idx+1:])
 	h.players = ret
@@ -73,8 +72,9 @@ func (h *Hand) fold(p player) ([]player, error) {
 	return ret, nil
 }
 
-func (h *Hand) blind(p *player, amount int) {
-	h.pot.add(p, amount)
+func (h *Hand) blind(p *player) {
+	req := h.blinds[p]
+	h.pot.add(p, req)
 }
 
 func (h *Hand) call(p *player) {
@@ -84,12 +84,16 @@ func (h *Hand) call(p *player) {
 
 func (h *Hand) winner() *player {
 	if (len(h.players) == 1) {
-		return &h.players[0]
+		return h.players[0]
 	}
 	return nil
 }
 
-func newHand(ps []player, smallBlind int, bigBlind int) (*Hand, error) {
+func newHand(ps []*player, blinds ...int) (*Hand, error) {
 	if (len(ps) <= 1) { return nil, errors.New("hand requires at least 2 players") }
-	return &Hand{ players:  ps, pot: newPot(), smallBlind: smallBlind, bigBlind: bigBlind }, nil
+	bs := make(map[*player]int)
+	for i, v := range(blinds) {
+		bs[ps[i]] = v
+	}
+	return &Hand{ players:  ps, pot: newPot(), blinds: bs }, nil
 }
