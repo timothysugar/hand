@@ -62,11 +62,17 @@ func TestHandRequiresTwoPlayers(t *testing.T) {
 	if (err == nil) { t.Error("New hand with less than one player should return error but did not")}
 }
 
-func TestPlayerCallsBlind(t *testing.T) {
-	p1 := newPlayer(2)
-	p2 := newPlayer(2)
+func TestPlayerPlaysBlind(t *testing.T) {
+	blindAmount := 2
+	p1 := newPlayer(blindAmount)
+	p2 := newPlayer(blindAmount)
 	players := []player{ p1, p2 }
-	h, _ := newHand(players, 1, 2)
+	h, _ := newHand(players, 1, blindAmount)
 
-	h.call(&p1)
+	var chips int
+	chips = p1.chips
+	if (chips != 2) { t.Errorf("Player should have 2 chips before playing blind but has %d", chips)}
+	h.blind(&p1, blindAmount)
+	chips = p1.chips
+	if (chips != 0) { t.Errorf("Player should have 0 chips after playing blind but has %d", chips)}
 }

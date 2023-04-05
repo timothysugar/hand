@@ -19,6 +19,10 @@ func newPlayer(chips int) player {
 	}
 }
 
+func (p *player) bet(amount int) {
+	p.chips = p.chips - amount
+}
+
 type pot struct {
 	contribs map[player]int
 }
@@ -29,9 +33,10 @@ func newPot() pot {
 	}
 }
 
-func (p pot) add(pl player, amount int) {
+func (p pot) add(pl *player, amount int) {
 	// if (p.contribs[pl] == nil) {}
-	p.contribs[pl] += amount
+	pl.bet(amount)
+	p.contribs[*pl] += amount
 }
 
 func (p pot) required(pl player) int {
@@ -68,9 +73,13 @@ func (h *Hand) fold(p player) ([]player, error) {
 	return ret, nil
 }
 
+func (h *Hand) blind(p *player, amount int) {
+	h.pot.add(p, amount)
+}
+
 func (h *Hand) call(p *player) {
 	req := h.pot.required(*p)
-	h.pot.add(*p, req)
+	h.pot.add(p, req)
 }
 
 func (h *Hand) winner() *player {
