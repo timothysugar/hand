@@ -103,9 +103,15 @@ func (h *Hand) nextMove() {
 	h.nextToPlay = h.players[(playIdx + 1) % len(h.players)]
 }
 
-func (h *Hand) call(p *player) {
+func (h *Hand) call(p *player) error {
+	if (p != h.nextToPlay) {
+		return nil
+		// return &outOfTurnError{ *p, *h.nextToPlay }
+	}
+
 	req := h.pot.required(*p)
 	h.pot.add(p, req)
+	return nil
 }
 
 func (h *Hand) winner() *player {

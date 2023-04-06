@@ -148,3 +148,19 @@ func TestBlindsPlayedInWrongOrderReturnsError(t *testing.T) {
 
 	if (err == nil) { t.Error("Expected an error for out of order blind but none received")}
 }
+
+func TestCalledInWrongOrderReturnsError(t *testing.T) {
+	blind := 1
+	initial := blind * 2
+	p1 := newPlayer(initial)
+	p2 := newPlayer(initial)
+	players := []*player{ p1, p2 }
+	h, _ := newHand(players, p1, blind)
+
+	var err error
+	err = h.blind(p1)
+	if (err != nil) { t.Error() }
+
+	err = h.call(p1)
+	if (err == nil) { t.Error("Expected an error for out of order call but none received")}
+}
