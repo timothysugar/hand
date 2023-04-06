@@ -2,6 +2,7 @@ package hand
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/rs/xid"
 )
@@ -34,7 +35,6 @@ func newPot() pot {
 }
 
 func (p pot) add(pl *player, amount int) {
-	// if (p.contribs[pl] == nil) {}
 	pl.bet(amount)
 	p.contribs[*pl] += amount
 }
@@ -50,6 +50,8 @@ func (p pot) required(pl player) int {
 
 type Hand struct {
 	players []*player
+	nextToPlay *player
+	dealer *player
 	pot	pot
 	blinds map[*player]int
 }
@@ -72,9 +74,33 @@ func (h *Hand) fold(p *player) ([]*player, error) {
 	return ret, nil
 }
 
-func (h *Hand) blind(p *player) {
+type outOfTurnError struct {
+    attempted player
+    nextToPlay player
+}
+
+func (e outOfTurnError) Error() string {
+	return fmt.Sprintf("%v is next to play but %v attempted", e.nextToPlay, e.attempted )
+}
+
+func (h *Hand) blind(p *player) error {
+	if (p != h.nextToPlay) {
+		return &outOfTurnError{ *p, *h.nextToPlay }
+	}
 	req := h.blinds[p]
 	h.pot.add(p, req)
+	h.nextMove()
+	return nil
+}
+
+func (h *Hand) nextMove() {
+	var playIdx int
+	for i, v := range(h.players) {
+		if (h.nextToPlay == v) {
+			playIdx = i
+		}
+	}
+	h.nextToPlay = h.players[(playIdx + 1) % len(h.players)]
 }
 
 func (h *Hand) call(p *player) {
@@ -89,11 +115,19 @@ func (h *Hand) winner() *player {
 	return nil
 }
 
-func newHand(ps []*player, blinds ...int) (*Hand, error) {
+func newHand(ps []*player, dealer *player, blinds ...int) (*Hand, error) {
 	if (len(ps) <= 1) { return nil, errors.New("hand requires at least 2 players") }
 	bs := make(map[*player]int)
-	for i, v := range(blinds) {
-		bs[ps[i]] = v
+	// Find index of dealer in players
+	var dIdx int
+	for i, v := range(ps) {
+		if (v == dealer) { dIdx = i}
 	}
-	return &Hand{ players:  ps, pot: newPot(), blinds: bs }, nil
+	// Set blinds from the dealer position. Assumes blinds passed from small and increasing
+	var idx int
+	for i, v := range(blinds) {
+		idx = (dIdx + i) % len(ps)
+		bs[ps[idx]] = v
+	}
+	return &Hand{ players:  ps, pot: newPot(), nextToPlay: dealer, blinds: bs }, nil
 }
