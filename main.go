@@ -72,6 +72,7 @@ func (h *Hand) fold(p *player) ([]*player, error) {
 	copy(ret[idx:], h.players[idx+1:])
 	h.players = ret
 
+	h.nextMove()
 	return ret, nil
 }
 
@@ -94,16 +95,6 @@ func (h *Hand) blind(p *player) error {
 	return nil
 }
 
-func (h *Hand) nextMove() {
-	var playIdx int
-	for i, v := range(h.players) {
-		if (h.nextToPlay == v) {
-			playIdx = i
-		}
-	}
-	h.nextToPlay = h.players[(playIdx + 1) % len(h.players)]
-}
-
 func (h *Hand) call(p *player) error {
 	if (p != h.nextToPlay) {
 		return &outOfTurnError{ *p, *h.nextToPlay }
@@ -114,6 +105,16 @@ func (h *Hand) call(p *player) error {
 
 	h.nextMove()
 	return nil
+}
+
+func (h *Hand) nextMove() {
+	var playIdx int
+	for i, v := range(h.players) {
+		if (h.nextToPlay == v) {
+			playIdx = i
+		}
+	}
+	h.nextToPlay = h.players[(playIdx + 1) % len(h.players)]
 }
 
 func (h *Hand) winner() *player {
