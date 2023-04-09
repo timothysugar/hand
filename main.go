@@ -51,12 +51,13 @@ func (p pot) required(pl player) int {
 type Hand struct {
 	players []*player
 	nextToPlay *player
-	dealer *player
 	pot	pot
 	blinds map[*player]int
 }
 
 func (h *Hand) fold(p *player) ([]*player, error) {
+	req := h.blinds[p]
+	if (req != 0) { return nil, errors.New("blind must be played before fold")}
 	if (len(h.players) == 1) { return nil, errors.New("final player cannot fold") }
 
 	var idx int
@@ -105,12 +106,13 @@ func (h *Hand) nextMove() {
 
 func (h *Hand) call(p *player) error {
 	if (p != h.nextToPlay) {
-		return nil
-		// return &outOfTurnError{ *p, *h.nextToPlay }
+		return &outOfTurnError{ *p, *h.nextToPlay }
 	}
 
 	req := h.pot.required(*p)
 	h.pot.add(p, req)
+
+	h.nextMove()
 	return nil
 }
 

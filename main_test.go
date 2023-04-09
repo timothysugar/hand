@@ -31,7 +31,7 @@ func TestPenultimatePlayerFolds(t *testing.T) {
 	p1 := newPlayer(2)
 	p2 := newPlayer(2)
 	players := []*player{ p1, p2 }
-	h, _ := newHand(players, p1, 1, 2)
+	h, _ := newHand(players, p1)
 
 	result, err := h.fold(p1)
 	
@@ -52,6 +52,17 @@ func TestFinalPlayerCannotFold(t *testing.T) {
 	_, err := h.fold(p2)
 
 	if (err == nil) { t.Errorf("Last player folding should return error but did not; err: %v", err)}
+}
+
+func TestBlindPlayerCannotFold(t *testing.T) {
+	p1 := newPlayer(1)
+	p2 := newPlayer(1)
+	players := []*player{ p1, p2 }
+	h, _ := newHand(players, p1, 1)
+
+	_, err := h.fold(p1)
+
+	if (err == nil) { t.Error("Player playing blind cannot fold")}
 }
 
 func TestHandRequiresTwoPlayers(t *testing.T) {
@@ -98,19 +109,28 @@ func TestBothPlayersPlayBlinds(t *testing.T) {
 }
 
 
-func TestPlayerCallsTheBlind(t *testing.T) {
-	blind := 1
-	p1 := newPlayer(blind)
-	p2 := newPlayer(blind)
-	players := []*player{ p1, p2 }
+func TestAllPlayerCallTheBlind(t *testing.T) {
+	initial := 1
+	blind := initial
+	p1 := newPlayer(initial)
+	p2 := newPlayer(initial)
+	p3 := newPlayer(initial)
+	players := []*player{ p1, p2, p3 }
 	h, _ := newHand(players, p1, blind)
 
-	if (p1.chips != blind) { t.Errorf("Player 1 should have 2 chips before playing blind but has %d", p1.chips)}
-	if (p2.chips != blind) { t.Errorf("Player 2 should have 2 chips before playing blind but has %d", p2.chips)}
-	h.blind(p1)
+	if (p1.chips != initial) { t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)}
+	if (p2.chips != initial) { t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.chips)}
+	if (p3.chips != initial) { t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.chips)}
+	var err error
+	err = h.blind(p1)
+	if (err != nil) { t.Error()}
 	if (p1.chips != 0) { t.Errorf("Player 1 should have 0 chips after playing blind but has %d", p1.chips)}
-	h.call(p2)
+	err = h.call(p2)
+	if (err != nil) { t.Error()}
 	if (p2.chips != 0) { t.Errorf("Player 2 should have 0 chips after calling but has %d", p2.chips)}
+	err = h.call(p3)
+	if (err != nil) { t.Error()}
+	if (p3.chips != 0) { t.Errorf("Player 3 should have 0 chips after calling but has %d", p3.chips)}
 }
 
 func TestBlindsPlayedFromDealer(t *testing.T) {
@@ -149,7 +169,7 @@ func TestBlindsPlayedInWrongOrderReturnsError(t *testing.T) {
 	if (err == nil) { t.Error("Expected an error for out of order blind but none received")}
 }
 
-func TestCalledInWrongOrderReturnsError(t *testing.T) {
+func TestSamePlayerCallsImmediatelyAfterBlindReturnsError(t *testing.T) {
 	blind := 1
 	initial := blind * 2
 	p1 := newPlayer(initial)
@@ -160,6 +180,26 @@ func TestCalledInWrongOrderReturnsError(t *testing.T) {
 	var err error
 	err = h.blind(p1)
 	if (err != nil) { t.Error() }
+
+	err = h.call(p1)
+	if (err == nil) { t.Error("Expected an error for out of order call but none received")}
+}
+
+func TestSecondCallInWrongOrderReturnsError(t *testing.T) {
+	blind := 1
+	initial := blind
+	p1 := newPlayer(initial)
+	p2 := newPlayer(initial)
+	p3 := newPlayer(initial)
+	players := []*player{ p1, p2, p3 }
+	h, _ := newHand(players, p1, blind)
+
+	var err error
+	err = h.blind(p1)
+	if (err != nil) { t.Error() }
+
+	err = h.call(p2)
+	if (err != nil) { t.Error()}
 
 	err = h.call(p1)
 	if (err == nil) { t.Error("Expected an error for out of order call but none received")}
