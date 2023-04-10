@@ -76,22 +76,45 @@ func (h *Hand) fold(p *player) ([]*player, error) {
 	return ret, nil
 }
 
-type outOfTurnError struct {
-    attempted player
-    nextToPlay player
-}
-
-func (e outOfTurnError) Error() string {
-	return fmt.Sprintf("%v is next to play but %v attempted", e.nextToPlay, e.attempted )
-}
-
 func (h *Hand) blind(p *player) error {
 	if (p != h.nextToPlay) {
 		return &outOfTurnError{ *p, *h.nextToPlay }
 	}
 	req := h.blinds[p]
 	h.pot.add(p, req)
+	h.blinds[p] = 0
 	h.nextMove()
+	return nil
+}
+
+type blindRequiredError struct {
+    player player
+    blindAmount int
+}
+
+func (e blindRequiredError) Error() string {
+	return fmt.Sprintf("blind of %d still to be played by %v", e.blindAmount, e.player)
+}
+
+type betTooLowError struct {
+    player player
+	betAmount int
+    requiredAmount int
+}
+
+func (e betTooLowError) Error() string {
+	return fmt.Sprintf("bet of %d played by %v is too low; %d required", e.betAmount, e.player, e.requiredAmount)
+}
+
+func (h *Hand) check(p *player) error {
+	reqB := h.blinds[p]
+	if (reqB != 0) { return &blindRequiredError {
+		*p, reqB, }
+	}
+	req := h.pot.required(*p)
+	if (req != 0) { return betTooLowError {
+		*p, 0, req,
+	}}
 	return nil
 }
 
@@ -99,12 +122,25 @@ func (h *Hand) call(p *player) error {
 	if (p != h.nextToPlay) {
 		return &outOfTurnError{ *p, *h.nextToPlay }
 	}
+	reqB := h.blinds[p]
+	if (reqB != 0) { return &blindRequiredError {
+		*p, reqB, }
+	}
 
 	req := h.pot.required(*p)
 	h.pot.add(p, req)
 
 	h.nextMove()
 	return nil
+}
+
+type outOfTurnError struct {
+    attempted player
+    nextToPlay player
+}
+
+func (e outOfTurnError) Error() string {
+	return fmt.Sprintf("%v is next to play but %v attempted", e.nextToPlay, e.attempted )
 }
 
 func (h *Hand) nextMove() {
