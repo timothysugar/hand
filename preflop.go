@@ -2,6 +2,10 @@ package hand
 
 import "errors"
 
+type preflop struct {
+	blinds map[*player]blind
+}
+
 func newPreflop(remaining []*player, blinds []int) (preflop, error) {
 	bs := make(map[*player]blind)
 

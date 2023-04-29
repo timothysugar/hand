@@ -31,6 +31,10 @@ func newHand(ps []*player, dealer *player, blinds ...int) (*hand, error) {
 	return &hand{ players: sortedPs, pot: newPot(), dealer: dealer, stage: state, nextToPlay: dealer  }, nil
 }
 
+func (h *hand) playFromDealer() {
+	h.nextToPlay = h.dealer
+}
+
 func (h *hand) activePlayers() []*player {
 	h.m.Lock()
 	defer h.m.Unlock()

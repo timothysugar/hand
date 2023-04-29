@@ -2,6 +2,9 @@ package hand
 
 import "errors"
 
+type won struct {
+}
+
 func (curr won) id() string {
 	return "won"
 }

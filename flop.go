@@ -5,7 +5,6 @@ import "errors"
 type flop struct {
 	initial []*player
 	plays []input
-	// players []*player
 }
 
 func newFlopState(initial []*player) flop {
@@ -29,7 +28,7 @@ func (curr flop) enter(h *hand) error {
 }
 
 func (curr flop) exit(h *hand) error {
-	h.nextToPlay = h.dealer
+	h.playFromDealer()
 	return nil
 }
 
@@ -58,7 +57,7 @@ func (curr flop) handleInput(h *hand, p *player, inp input) (stage, error) {
 	curr.plays = append(curr.plays, inp)
 	if (curr.allPlayed(h.pot)) { 
 		curr.exit(h)
-		return turn{}, nil
+		return newTurnState(h.activePlayers()), nil
 	}
 
 	return curr, nil

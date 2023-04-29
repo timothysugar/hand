@@ -23,15 +23,3 @@ const (
 	Call
 	Raise
 )
-
-type preflop struct {
-	blinds map[*player]blind
-}
-
-type turn struct {
-	plays []input
-}
-
-type won struct {
-}
-

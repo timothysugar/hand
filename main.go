@@ -12,7 +12,6 @@ func (h *hand) doCheck(p *player) error {
 	return nil
 }
 
-
 func (h *hand) doCall(p *player) error {
 	req := h.pot.required(*p)
 	h.pot.add(p, req)
