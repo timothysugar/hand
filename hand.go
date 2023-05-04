@@ -9,6 +9,7 @@ import (
 type hand struct {
 	players []*player
 	m sync.RWMutex
+	finaliser handFinaliser
 	dealer *player
 	nextToPlay *player
 	cards []card
@@ -16,7 +17,10 @@ type hand struct {
 	pot	pot
 }
 
-func newHand(ps []*player, dealer *player, blinds ...int) (*hand, error) {
+type finishedHand struct {}
+type handFinaliser func() finishedHand
+
+func newHand(cb handFinaliser, ps []*player, dealer *player, blinds ...int) (*hand, error) {
 	if (len(ps) <= 1) { return nil, errors.New("hand requires at least 2 players") }
 
 	var dIdx int
@@ -28,7 +32,7 @@ func newHand(ps []*player, dealer *player, blinds ...int) (*hand, error) {
 
 	state, err := initialGameState(sortedPs, blinds)
 	if (err != nil) { return nil, err}
-	return &hand{ players: sortedPs, pot: newPot(), dealer: dealer, stage: state, nextToPlay: dealer  }, nil
+	return &hand{ players: sortedPs, pot: newPot(), dealer: dealer, stage: state, nextToPlay: dealer, finaliser: cb }, nil
 }
 
 func (h *hand) playFromDealer() {

@@ -23,7 +23,7 @@ func (curr flop) requiredBet(h *hand, p *player) int {
 func (curr flop) enter(h *hand) error {
 	cs := len(h.cards)
 	expected := 3
-	if (cs < 3) { h.tableCard(expected - cs)}
+	if (cs < expected) { h.tableCard(expected - cs)}
 	return nil
 }
 

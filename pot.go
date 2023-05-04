@@ -1,18 +1,18 @@
 package hand
 
 type pot struct {
-	contribs map[player]int
+	contribs map[string]int
 }
 
 func newPot() pot {
 	return pot{
-		contribs: make(map[player]int),
+		contribs: make(map[string]int),
 	}
 }
 
 func (p pot) add(pl *player, amount int) {
 	pl.bet(amount)
-	p.contribs[*pl] += amount
+	p.contribs[pl.id] += amount
 }
 
 func (p pot) maxStake() int {
@@ -36,7 +36,7 @@ func (p pot) outstandingStake() bool {
 }
 
 func (p pot) required(pl player) int {
-	curr := p.contribs[pl]
+	curr := p.contribs[pl.id]
 	max := p.maxStake()
 	return max - curr
 }

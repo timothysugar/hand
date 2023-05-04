@@ -1,7 +1,15 @@
 package hand
 
+import "errors"
+
 type river struct {
+	initial []*player
 	plays []input
+}
+
+func newRiverState(initial []*player) river {
+	plays := make([]input, 0)
+	return river{ initial: initial, plays: plays }
 }
 
 func (curr river) id() string {
@@ -25,23 +33,36 @@ func (curr river) exit(h *hand) error {
 }
 
 func (curr river) handleInput(h *hand, p *player, inp input) (stage, error) {
-	if (len(curr.plays) >= len(h.players) && !h.pot.outstandingStake()) { return turn{}, nil}
+	var err error
 	switch inp.action {
 	case Fold:
-		_, err := h.doFold(p);
-		if (err != nil) { return nil, err }
-		if (len(h.players) == 1) { 
+		var remaining []*player
+		remaining, err = h.doFold(p)
+		if (len(remaining) == 1) { 
 			curr.exit(h)
 			return won{}, nil 
 		}
 	case Call:
-		err := h.call(p)
-		if (err != nil) { return nil, err }
-		plays := append(curr.plays, inp)
-		curr.exit(h)
-		return flop{ plays: plays }, nil // TODO river
+		err = h.doCall(p)
+	case Check:
+		err = h.doCheck(p)
 	case Raise:
-		// TODO
+		// todo
+	default:
+		return nil, errors.New("unsupported input")
 	}
+
+	if (err != nil) { return nil, err }
+
+	curr.plays = append(curr.plays, inp)
+	if (curr.allPlayed(h.pot)) { 
+		curr.exit(h)
+		return won{}, nil
+	}
+
 	return curr, nil
+}
+
+func (curr river) allPlayed(pot pot) bool {
+	return (len(curr.plays) >= len(curr.initial) && !pot.outstandingStake())
 }
