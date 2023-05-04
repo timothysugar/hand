@@ -8,7 +8,9 @@ func (p *player) bet(amount int) {
 
 func (h *hand) doCheck(p *player) error {
 	req := h.pot.required(*p)
-	if (req != 0) { return errors.New("cannot check when required is not zero") }
+	if req != 0 {
+		return errors.New("cannot check when required is not zero")
+	}
 	return nil
 }
 
@@ -20,5 +22,5 @@ func (h *hand) doCall(p *player) error {
 
 func (h *hand) call(p *player) error {
 	req := h.stage.requiredBet(h, p)
-	return h.handleInput(p, input{ action: Call, chips: req})
+	return h.handleInput(p, input{action: Call, chips: req})
 }

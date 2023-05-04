@@ -17,20 +17,24 @@ func (p pot) add(pl *player, amount int) {
 
 func (p pot) maxStake() int {
 	max := 0
-	for _, v := range(p.contribs) {
-		if (v > max) { max = v }
+	for _, v := range p.contribs {
+		if v > max {
+			max = v
+		}
 	}
 	return max
 }
 
 func (p pot) outstandingStake() bool {
 	var anyStake int
-	for _, v := range(p.contribs) {
+	for _, v := range p.contribs {
 		anyStake = v
 		break
 	}
-	for _, v := range(p.contribs) {
-		if (anyStake != v) { return true}
+	for _, v := range p.contribs {
+		if anyStake != v {
+			return true
+		}
 	}
 	return false
 }

@@ -3,15 +3,15 @@ package hand
 import "github.com/rs/xid"
 
 type player struct {
-	id string
-	chips int
-	cards []card
+	id     string
+	chips  int
+	cards  []card
 	folded bool
 }
 
 func newPlayer(chips int) *player {
 	return &player{
-		id: xid.New().String(),
+		id:    xid.New().String(),
 		chips: chips,
 	}
 }

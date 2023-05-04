@@ -9,8 +9,10 @@ type preflop struct {
 func newPreflop(remaining []*player, blinds []int) (preflop, error) {
 	bs := make(map[*player]blind)
 
-	for i, v := range(remaining) {
-		if (i >= len(blinds)) { break }
+	for i, v := range remaining {
+		if i >= len(blinds) {
+			break
+		}
 		bs[v] = newBlind(blinds[i])
 	}
 	return preflop{blinds: bs}, nil
@@ -27,7 +29,9 @@ func (curr preflop) enter(h *hand) error {
 
 func (curr preflop) exit(h *hand) error {
 	next, err := h.activePlayerAt(len(curr.blinds))
-	if (err != nil) { return err }
+	if err != nil {
+		return err
+	}
 	h.nextToPlay = next
 	return nil
 }
@@ -42,11 +46,13 @@ func (curr preflop) handleInput(h *hand, p *player, inp input) (stage, error) {
 		blinds := curr.blinds
 		blind := blinds[p]
 		b, err := blind.play(inp.chips)
-		if (err != nil) { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		h.pot.add(p, blind.required)
 		blinds[p] = *b
-		for _, v := range(blinds) {
-			if (v.required != 0 && !v.played()) {
+		for _, v := range blinds {
+			if v.required != 0 && !v.played() {
 				return curr, nil
 			}
 		}
