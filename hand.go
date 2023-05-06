@@ -148,13 +148,6 @@ func (h *hand) nextMove() {
 	h.nextToPlay = h.players[(playIdx+1)%len(h.players)]
 }
 
-func (h *hand) winner() *player {
-	if len(h.players) == 1 {
-		return h.players[0]
-	}
-	return nil
-}
-
 func (h *hand) handleInput(p *player, inp input) error {
 	if p != h.nextToPlay {
 		return &outOfTurnError{p, h.nextToPlay}

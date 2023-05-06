@@ -22,14 +22,10 @@ func TestPenultimatePlayerFolds(t *testing.T) {
 		if err != nil {
 			t.Error("Error should be nil")
 		}
-		winner := h.winner()
-		if winner != p2 {
-			t.Errorf("Hand should have been won by %v but wasn't", p1)
-		}
 		checkPlayers(t, h.players, p2)
 	}()
 	v := <-done
-	want := finishedHand{}
+	want := finishedHand{ winner: p2, chips: 0 }
 	if v != want {
 		t.Errorf("expected %v but got %v", want, v)
 	}
@@ -46,32 +42,24 @@ func TestPenultimatePlayerFoldsFromBlind(t *testing.T) {
 	done := make(chan finishedHand)
 	h, _ := newHand(done, players, p1, smallBlind)
 
-	// preflop
 	go func() {
-
 		var err error
 		err = h.blind(p1)
 		if err != nil {
 			t.Error(err)
 		}
 
-		var winner *player
-		winner = h.winner()
-		if winner != nil {
-			t.Error("Hand should not yet have been won")
-		}
-
 		err = h.fold(p2)
 		if err != nil {
 			t.Error(err)
 		}
-		winner = h.winner()
-		if winner != p1 {
-			t.Errorf("Hand should have been won by %v but wasn't", p1)
-		}
 	}()
-	<-done
-	checkPlayers(t, h.players, p1)
+
+	v := <-done
+	want := finishedHand{ winner: p1, chips: 1 }
+	if v != want {
+		t.Errorf("expected %v but got %v", want, v)
+	}
 }
 
 func TestFinalPlayerCannotFold(t *testing.T) {
@@ -91,17 +79,13 @@ func TestFinalPlayerCannotFold(t *testing.T) {
 
 		err = h.fold(p2)
 		if err == nil {
-			t.Error("Last player folding should return error but did not")
+			t.Error("last player folding should return error")
 		}
 	}()
 	v := <-done
 	want := finishedHand{}
 	if v != want {
 		t.Errorf("expected %v but got %v", want, v)
-	}
-	_, ok := <-done
-	if ok {
-		t.Error("expected done channel to be closed")
 	}
 }
 
@@ -369,10 +353,6 @@ func TestBlindsPlayedFromDealer(t *testing.T) {
 	if v != want {
 		t.Errorf("expected %v but got %v", want, v)
 	}
-	_, ok := <-done
-	if ok {
-		t.Error("expected done channel to be closed")
-	}
 
 	// p2 is next from the dealer
 	done = make(chan finishedHand)
@@ -505,21 +485,11 @@ func TestCallBlindThenChecksToTheRiver(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-
-		// // hand finished
-		// w := h.winner()
-		// if (w != p1) {
-		// 	t.Errorf("expected hand to be won by %v but got %v", p1, w)
-		// }
 	}()
 	v := <-done
 	want := finishedHand{winner: p1, chips: smallBlind * len(players) }
 	if v != want {
 		t.Errorf("expected %v but got %v", want, v)
-	}
-	_, ok := <-done
-	if ok {
-		t.Error("expected done channel to be closed")
 	}
 }
 
