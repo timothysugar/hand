@@ -61,7 +61,7 @@ func (curr river) handleInput(h *hand, p *player, inp input) (stage, error) {
 	curr.plays = append(curr.plays, inp)
 	if curr.allPlayed(h.pot) {
 		curr.exit(h)
-		return won{}, nil
+		return newWon(h.activePlayers()), nil
 	}
 
 	return curr, nil

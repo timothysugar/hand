@@ -15,6 +15,14 @@ func (p pot) add(pl *player, amount int) {
 	p.contribs[pl.id] += amount
 }
 
+func (p pot) total() int {
+	total := 0
+	for _, v := range p.contribs {
+		total += v
+	}
+	return total
+}
+
 func (p pot) maxStake() int {
 	max := 0
 	for _, v := range p.contribs {

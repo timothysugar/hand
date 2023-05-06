@@ -49,26 +49,26 @@ func TestPenultimatePlayerFoldsFromBlind(t *testing.T) {
 	// preflop
 	go func() {
 
-	var err error
-	err = h.blind(p1)
-	if err != nil {
-		t.Error(err)
-	}
+		var err error
+		err = h.blind(p1)
+		if err != nil {
+			t.Error(err)
+		}
 
-	var winner *player
-	winner = h.winner()
-	if winner != nil {
-		t.Error("Hand should not yet have been won")
-	}
+		var winner *player
+		winner = h.winner()
+		if winner != nil {
+			t.Error("Hand should not yet have been won")
+		}
 
-	err = h.fold(p2)
-	if err != nil {
-		t.Error(err)
-	}
-	winner = h.winner()
-	if winner != p1 {
-		t.Errorf("Hand should have been won by %v but wasn't", p1)
-	}
+		err = h.fold(p2)
+		if err != nil {
+			t.Error(err)
+		}
+		winner = h.winner()
+		if winner != p1 {
+			t.Errorf("Hand should have been won by %v but wasn't", p1)
+		}
 	}()
 	<-done
 	checkPlayers(t, h.players, p1)
@@ -83,17 +83,16 @@ func TestFinalPlayerCannotFold(t *testing.T) {
 	h, _ := newHand(done, players, p1)
 
 	go func() {
+		var err error
+		err = h.fold(p1)
+		if err != nil {
+			t.Error()
+		}
 
-	var err error
-	err = h.fold(p1)
-	if err != nil {
-		t.Error()
-	}
-
-	err = h.fold(p2)
-	if err == nil {
-		t.Error("Last player folding should return error but did not")
-	}
+		err = h.fold(p2)
+		if err == nil {
+			t.Error("Last player folding should return error but did not")
+		}
 	}()
 	v := <-done
 	want := finishedHand{}
@@ -343,28 +342,27 @@ func TestBlindsPlayedFromDealer(t *testing.T) {
 	h1, _ := newHand(done, players, p1, smallBlind)
 
 	go func() {
-
-	if p1.chips != initial {
-		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)
-	}
-	if p2.chips != initial {
-		t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.chips)
-	}
-	var err error
-	err = h1.blind(p1)
-	if err != nil {
-		t.Error(err)
-	}
-	if p1.chips != initial-smallBlind {
-		t.Errorf("Player has unexpected number of chips %d", p1.chips)
-	}
-	err = h1.fold(p2)
-	if err != nil {
-		t.Error(err)
-	}
-	if p2.chips != initial {
-		t.Errorf("Player has unexpected number of chips %d", p2.chips)
-	}
+		if p1.chips != initial {
+			t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)
+		}
+		if p2.chips != initial {
+			t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.chips)
+		}
+		var err error
+		err = h1.blind(p1)
+		if err != nil {
+			t.Error(err)
+		}
+		if p1.chips != initial-smallBlind {
+			t.Errorf("Player has unexpected number of chips %d", p1.chips)
+		}
+		err = h1.fold(p2)
+		if err != nil {
+			t.Error(err)
+		}
+		if p2.chips != initial {
+			t.Errorf("Player has unexpected number of chips %d", p2.chips)
+		}
 	}()
 	v := <-done
 	want := finishedHand{}
@@ -461,44 +459,68 @@ func TestCallBlindThenChecksToTheRiver(t *testing.T) {
 	done := make(chan finishedHand)
 	h, _ := newHand(done, players, p1, smallBlind)
 
-	// preflop
-	var err error
-	err = h.blind(p1)
-	if err != nil {
-		t.Error(err)
-	}
+	go func() {
+		// preflop
+		var err error
+		err = h.blind(p1)
+		if err != nil {
+			t.Error(err)
+		}
 
-	// flop
-	if len(h.cards) != 3 {
-		t.Errorf("unexpected number of cards, got %d	", len(h.cards))
-	}
-	err = h.call(p2)
-	if err != nil {
-		t.Error(err)
-	}
-	err = h.check(p1)
-	if err != nil {
-		t.Error(err)
-	}
+		// flop
+		if len(h.cards) != 3 {
+			t.Errorf("unexpected number of cards, got %d	", len(h.cards))
+		}
+		err = h.call(p2)
+		if err != nil {
+			t.Error(err)
+		}
+		err = h.check(p1)
+		if err != nil {
+			t.Error(err)
+		}
 
-	// turn
-	if len(h.cards) != 4 {
-		t.Errorf("unexpected number of cards, got %d	", len(h.cards))
-	}
-	err = h.check(p1)
-	if err != nil {
-		t.Error(err)
-	}
-	err = h.check(p2)
-	if err != nil {
-		t.Error(err)
-	}
+		// turn
+		if len(h.cards) != 4 {
+			t.Errorf("unexpected number of cards, got %d	", len(h.cards))
+		}
+		err = h.check(p1)
+		if err != nil {
+			t.Error(err)
+		}
+		err = h.check(p2)
+		if err != nil {
+			t.Error(err)
+		}
 
-	// river
-	if len(h.cards) != 5 {
-		t.Errorf("unexpected number of cards, got %d	", len(h.cards))
+		// river
+		if len(h.cards) != 5 {
+			t.Errorf("unexpected number of cards, got %d	", len(h.cards))
+		}
+		err = h.check(p1)
+		if err != nil {
+			t.Error(err)
+		}
+		err = h.check(p2)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// // hand finished
+		// w := h.winner()
+		// if (w != p1) {
+		// 	t.Errorf("expected hand to be won by %v but got %v", p1, w)
+		// }
+	}()
+	v := <-done
+	want := finishedHand{winner: p1, chips: smallBlind * len(players) }
+	if v != want {
+		t.Errorf("expected %v but got %v", want, v)
 	}
-	// err = h.check(p1)
+	_, ok := <-done
+	if ok {
+		t.Error("expected done channel to be closed")
+	}
 }
 
 func (h *hand) check(p *player) error {

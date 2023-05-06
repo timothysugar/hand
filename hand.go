@@ -17,7 +17,10 @@ type hand struct {
 	pot        pot
 }
 
-type finishedHand struct{}
+type finishedHand struct{
+	winner *player
+	chips int
+}
 
 func newHand(ch chan finishedHand, ps []*player, dealer *player, blinds ...int) (*hand, error) {
 	if len(ps) <= 1 {
@@ -40,8 +43,8 @@ func newHand(ch chan finishedHand, ps []*player, dealer *player, blinds ...int) 
 	return &hand{players: sortedPs, pot: newPot(), dealer: dealer, stage: state, nextToPlay: dealer, finished: ch}, nil
 }
 
-func (h *hand) finish() {
-	h.finished <- finishedHand{}
+func (h *hand) finish(fh finishedHand) {
+	h.finished <- fh
 	close(h.finished)
 }
 

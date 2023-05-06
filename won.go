@@ -9,7 +9,7 @@ type won struct {
 	ps []*player
 }
 
-func (curr won) newWon(remaining []*player) won {
+func newWon(remaining []*player) won {
 	return won{remaining}
 }
 
@@ -22,6 +22,7 @@ func (curr won) requiredBet(h *hand, p *player) int {
 }
 
 type pHand struct {
+	player *player
 	cards []card
 }
 
@@ -38,15 +39,15 @@ func (p byHand) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p byHand) Less(i, j int) bool { return false } // TODO: Sort by rank rather than deterministic sorting
 
 func (curr won) enter(h *hand) error {
+	// evaluate hands
 	var pHands []pHand
 	for _, v := range h.players {
-		pH := pHand{append(h.cards, v.cards...)}
+		pH := pHand{v, append(h.cards, v.cards...)}
 		pHands = append(pHands, pH)
 	}
 	sort.Sort(byHand(pHands))
-	// evaluate hands
-	// distribute pot
-	h.finish()
+
+	h.finish(finishedHand{ pHands[0].player, h.pot.total()})
 	return nil
 }
 
