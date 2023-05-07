@@ -3,13 +3,11 @@ package hand
 import "errors"
 
 type flop struct {
-	initial []*player
-	plays   []input
+	bs bettingStage
 }
 
-func newFlopState(initial []*player) flop {
-	plays := make([]input, 0)
-	return flop{initial: initial, plays: plays}
+func newFlopState(bs bettingStage) flop {
+	return flop{b bs}
 }
 
 func (curr flop) id() string {
@@ -39,7 +37,7 @@ func (curr flop) handleInput(h *hand, p *player, inp input) (stage, error) {
 	switch inp.action {
 	case Fold:
 		var remaining []*player
-		remaining, err = h.doFold(p)
+		remaining, err = h.fold(p)
 		if len(remaining) == 1 {
 			curr.exit(h)
 			return won{}, nil
@@ -59,14 +57,10 @@ func (curr flop) handleInput(h *hand, p *player, inp input) (stage, error) {
 	}
 
 	curr.plays = append(curr.plays, inp)
-	if curr.allPlayed(h.pot) {
+	if curr.bs.allPlayed(h.pot) {
 		curr.exit(h)
 		return newTurnState(h.activePlayers()), nil
 	}
 
 	return curr, nil
-}
-
-func (curr flop) allPlayed(pot pot) bool {
-	return (len(curr.plays) >= len(curr.initial) && !pot.outstandingStake())
 }

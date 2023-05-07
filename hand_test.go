@@ -1,6 +1,8 @@
 package hand
 
-import "testing"
+import (
+	"testing"
+)
 
 const (
 	initial    = 2
@@ -17,9 +19,9 @@ func TestPenultimatePlayerFolds(t *testing.T) {
 	go func() {
 		h, _ := newHand(done, players, p1)
 
-		err := h.fold(p1)
+		
 
-		if err != nil {
+		if err := playFold(h, p1); err != nil {
 			t.Error("Error should be nil")
 		}
 		checkPlayers(t, h.players, p2)
@@ -44,12 +46,12 @@ func TestPenultimatePlayerFoldsFromBlind(t *testing.T) {
 
 	go func() {
 		var err error
-		err = h.blind(p1)
+		err = playBlind(h, p1)
 		if err != nil {
 			t.Error(err)
 		}
 
-		err = h.fold(p2)
+		err = playFold(h, p2)
 		if err != nil {
 			t.Error(err)
 		}
@@ -72,18 +74,18 @@ func TestFinalPlayerCannotFold(t *testing.T) {
 
 	go func() {
 		var err error
-		err = h.fold(p1)
+		err = playFold(h, p1)
 		if err != nil {
 			t.Error()
 		}
 
-		err = h.fold(p2)
+		err = playFold(h, p2)
 		if err == nil {
 			t.Error("last player folding should return error")
 		}
 	}()
 	v := <-done
-	want := finishedHand{}
+	want := finishedHand{winner: p2}
 	if v != want {
 		t.Errorf("expected %v but got %v", want, v)
 	}
@@ -97,7 +99,7 @@ func TestBlindPlayerCannotFold(t *testing.T) {
 	done := make(chan finishedHand)
 	h, _ := newHand(done, players, p1, 1)
 
-	err := h.fold(p1)
+	err := playFold(h, p1)
 
 	if err == nil {
 		t.Error("Player playing blind cannot fold")
@@ -151,14 +153,14 @@ func TestAllPlayersCallTheBlind(t *testing.T) {
 		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.chips)
 	}
 	var err error
-	err = h.blind(p1)
+	err = playBlind(h, p1)
 	if err != nil {
 		t.Error(err)
 	}
 	if p1.chips != (initial - smallBlind) {
 		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.chips)
 	}
-	err = h.blind(p2)
+	err = playBlind(h, p2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -181,7 +183,7 @@ func TestAllPlayersCallTheBlind(t *testing.T) {
 	if p1.chips != (initial - bigBlind) {
 		t.Errorf("Player 1 should have %d chips after calling but has %d", initial-bigBlind, p1.chips)
 	}
-	err = h.check(p2)
+	err = playCheck(h, p2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -209,14 +211,14 @@ func TestOneFoldsAndOneCallsBlind(t *testing.T) {
 		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.chips)
 	}
 	var err error
-	err = h.blind(p1)
+	err = playBlind(h, p1)
 	if err != nil {
 		t.Error(err)
 	}
 	if p1.chips != (initial - smallBlind) {
 		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.chips)
 	}
-	err = h.fold(p2)
+	err = playFold(h, p2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -255,14 +257,14 @@ func TestOneFoldsAndOneChecksBlind(t *testing.T) {
 		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.chips)
 	}
 	var err error
-	err = h.blind(p1)
+	err = playBlind(h, p1)
 	if err != nil {
 		t.Error(err)
 	}
 	if p1.chips != (initial - smallBlind) {
 		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.chips)
 	}
-	err = h.fold(p2)
+	err = playFold(h, p2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -273,7 +275,7 @@ func TestOneFoldsAndOneChecksBlind(t *testing.T) {
 	if p3.chips != (initial - smallBlind) {
 		t.Errorf("Player 3 should have %d chips after calling but has %d", initial-smallBlind, p3.chips)
 	}
-	err = h.check(p1)
+	err = playCheck(h, p1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -290,7 +292,7 @@ func TestCheckWhenBlindDueReturnsError(t *testing.T) {
 	done := make(chan finishedHand)
 	h, _ := newHand(done, players, p1, smallBlind)
 
-	err := h.check(p1)
+	err := playCheck(h, p1)
 	if err == nil {
 		t.Error()
 	}
@@ -305,11 +307,11 @@ func TestCheckWhenBetDueReturnsError(t *testing.T) {
 	h, _ := newHand(done, players, p1, smallBlind)
 
 	var err error
-	err = h.blind(p1)
+	err = playBlind(h, p1)
 	if err != nil {
 		t.Error()
 	}
-	err = h.check(p2)
+	err = playCheck(h, p2)
 	if err == nil {
 		t.Error()
 	}
@@ -318,50 +320,15 @@ func TestCheckWhenBetDueReturnsError(t *testing.T) {
 func TestBlindsPlayedFromDealer(t *testing.T) {
 	p1 := newPlayer(initial)
 	p2 := newPlayer(initial)
-	players := []*player{p1, p2}
+	players := []*player{p1, p2} // p2 is not the first in order
 
-	var done chan finishedHand
-	done = make(chan finishedHand)
-	// p1 is first from the dealer
-	h1, _ := newHand(done, players, p1, smallBlind)
-
-	go func() {
-		if p1.chips != initial {
-			t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)
-		}
-		if p2.chips != initial {
-			t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.chips)
-		}
-		var err error
-		err = h1.blind(p1)
-		if err != nil {
-			t.Error(err)
-		}
-		if p1.chips != initial-smallBlind {
-			t.Errorf("Player has unexpected number of chips %d", p1.chips)
-		}
-		err = h1.fold(p2)
-		if err != nil {
-			t.Error(err)
-		}
-		if p2.chips != initial {
-			t.Errorf("Player has unexpected number of chips %d", p2.chips)
-		}
-	}()
-	v := <-done
-	want := finishedHand{}
-	if v != want {
-		t.Errorf("expected %v but got %v", want, v)
-	}
-
-	// p2 is next from the dealer
-	done = make(chan finishedHand)
-	h2, err := newHand(done, players, p2, smallBlind)
+	done := make(chan finishedHand)
+	h, err := newHand(done, players, p2, smallBlind)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = h2.blind(p2)
+	err = playBlind(h, p2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -378,7 +345,7 @@ func TestBlindsPlayedInWrongOrderReturnsError(t *testing.T) {
 	done := make(chan finishedHand)
 	h, _ := newHand(done, players, p1, smallBlind)
 
-	err := h.blind(p2)
+	err := playBlind(h, p2)
 
 	if err == nil {
 		t.Error("Expected an error for out of order blind but none received")
@@ -394,7 +361,7 @@ func TestSamePlayerCallsImmediatelyAfterBlindReturnsError(t *testing.T) {
 	h, _ := newHand(done, players, p1, smallBlind)
 
 	var err error
-	err = h.blind(p1)
+	err = playBlind(h, p1)
 	if err != nil {
 		t.Error()
 	}
@@ -415,7 +382,7 @@ func TestSecondCallInWrongOrderReturnsError(t *testing.T) {
 	h, _ := newHand(done, players, p1, smallBlind)
 
 	var err error
-	err = h.blind(p1)
+	err = playBlind(h, p1)
 	if err != nil {
 		t.Error()
 	}
@@ -442,7 +409,7 @@ func TestCallBlindThenChecksToTheRiver(t *testing.T) {
 	go func() {
 		// preflop
 		var err error
-		err = h.blind(p1)
+		err = playBlind(h, p1)
 		if err != nil {
 			t.Error(err)
 		}
@@ -455,7 +422,7 @@ func TestCallBlindThenChecksToTheRiver(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		err = h.check(p1)
+		err = playCheck(h, p1)
 		if err != nil {
 			t.Error(err)
 		}
@@ -464,11 +431,11 @@ func TestCallBlindThenChecksToTheRiver(t *testing.T) {
 		if len(h.cards) != 4 {
 			t.Errorf("unexpected number of cards, got %d	", len(h.cards))
 		}
-		err = h.check(p1)
+		err = playCheck(h, p1)
 		if err != nil {
 			t.Error(err)
 		}
-		err = h.check(p2)
+		err = playCheck(h, p2)
 		if err != nil {
 			t.Error(err)
 		}
@@ -477,11 +444,11 @@ func TestCallBlindThenChecksToTheRiver(t *testing.T) {
 		if len(h.cards) != 5 {
 			t.Errorf("unexpected number of cards, got %d	", len(h.cards))
 		}
-		err = h.check(p1)
+		err = playCheck(h, p1)
 		if err != nil {
 			t.Error(err)
 		}
-		err = h.check(p2)
+		err = playCheck(h, p2)
 		if err != nil {
 			t.Error(err)
 		}
@@ -493,7 +460,16 @@ func TestCallBlindThenChecksToTheRiver(t *testing.T) {
 	}
 }
 
-func (h *hand) check(p *player) error {
+func playBlind(h *hand, p *player) error {
+	req := h.stage.requiredBet(h, p)
+	return h.handleInput(p, input{action: Blind, chips: req})
+}
+
+func playFold(h *hand, p *player) error {
+	return h.handleInput(p, input{action: Fold, chips: 0})
+}
+
+func playCheck(h *hand, p *player) error {
 	return h.handleInput(p, input{action: Check, chips: 0})
 }
 

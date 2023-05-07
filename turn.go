@@ -39,7 +39,7 @@ func (curr turn) handleInput(h *hand, p *player, inp input) (stage, error) {
 	switch inp.action {
 	case Fold:
 		var remaining []*player
-		remaining, err = h.doFold(p)
+		remaining, err = h.fold(p)
 		if len(remaining) == 1 {
 			curr.exit(h)
 			return won{}, nil

@@ -170,7 +170,10 @@ func (h *hand) handleInput(p *player, inp input) error {
 	return nil
 }
 
-func (h *hand) doFold(p *player) ([]*player, error) {
+func (h *hand) fold(p *player) ([]*player, error) {
+	if len(h.players) == 1 {
+		return nil, errors.New("final player cannot fold")
+	}
 	var idx int
 	for i, v := range h.players {
 		if v == p {
@@ -184,21 +187,4 @@ func (h *hand) doFold(p *player) ([]*player, error) {
 	h.players = ret
 
 	return ret, nil
-}
-
-func (h *hand) fold(p *player) error {
-	if len(h.players) == 1 {
-		return errors.New("final player cannot fold")
-	}
-	err := h.handleInput(p, input{action: Fold, chips: 0})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (h *hand) blind(p *player) error {
-	req := h.stage.requiredBet(h, p)
-	return h.handleInput(p, input{action: Blind, chips: req})
 }
