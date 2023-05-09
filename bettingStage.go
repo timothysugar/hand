@@ -6,13 +6,18 @@ type bettingStage struct {
 	initial []*player
 	plays   []input
 	numCards int
-	nextStageFact func([]*player) stage
+	makeCurrStage func(bettingStage) stage
+	makeNextStage func([]*player) stage
 }
 
-func newBettingStage() bettingStage {
+func newBettingStage(
+	activePlayers []*player,
+	numCards int,
+	curr func(bettingStage) stage,
+	nextStageFact func([]*player) stage,
+) bettingStage {
 	plays := make([]input, 0)
-	return bettingStage{plays} 
-
+	return bettingStage{activePlayers, plays, numCards, curr, nextStageFact} 
 }
 
 func (bs bettingStage) requiredBet(h *hand, p *player) int {
@@ -32,7 +37,7 @@ func (bs bettingStage) exit(h *hand) error {
 	return nil
 }
 
-func (bs bettingStage) handleInput(curr func(bettingStage) stage, h *hand, p *player, inp input) (stage, error) {
+func (bs bettingStage) handleInput(h *hand, p *player, inp input) (stage, error) {
 	var err error
 	switch inp.action {
 	case Fold:
@@ -59,10 +64,10 @@ func (bs bettingStage) handleInput(curr func(bettingStage) stage, h *hand, p *pl
 	bs.plays = append(bs.plays, inp)
 	if bs.allPlayed(h.pot) {
 		bs.exit(h)
-		return bs.nextStageFact(h.activePlayers()), nil
+		return bs.makeNextStage(h.activePlayers()), nil
 	}
 
-	return curr(bs), nil
+	return bs.makeCurrStage(bs), nil
 }
 
 func (bs bettingStage) allPlayed(pot pot) bool {
