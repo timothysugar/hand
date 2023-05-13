@@ -14,10 +14,7 @@ func newBlind(required int) blind {
 }
 
 func (b blind) played() bool {
-	if b.contributed >= b.required {
-		return true
-	}
-	return false
+	return b.contributed >= b.required
 }
 
 func (b blind) play(value int) (*blind, error) {

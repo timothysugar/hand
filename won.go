@@ -26,16 +26,11 @@ type pHand struct {
 	cards  []card
 }
 
-func (pHand) rank() int {
-	return 0
-}
-
 type byHand []pHand
 
 func (p byHand) Len() int      { return len(p) }
 func (p byHand) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
-// func (p ByHand) Less(i, j int) bool { return p[i].rank() < p[j].rank() }
 func (p byHand) Less(i, j int) bool { return false } // TODO: Sort by rank rather than deterministic sorting
 
 func (curr won) enter(h *hand) error {
