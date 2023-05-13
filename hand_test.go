@@ -482,13 +482,13 @@ func TestPlayerFoldsAfterReraise(t *testing.T) {
 			t.Errorf("unexpected number of cards, got %d", len(h.cards))
 		}
 
-		if err := playRaise(h, p2, 1); err != nil {
+		if err := playRaise(h, p2, smallBlind+1); err != nil {
 			t.Error(err)
 		}
 		if err := playRaise(h, p1, 2); err != nil {
 			t.Error(err)
 		}
-		// outstanding action in flop
+		// outstanding action in flop so should not advance stage
 		if len(h.cards) != 3 {
 			t.Errorf("unexpected number of cards, got %d", len(h.cards))
 		}
@@ -497,7 +497,7 @@ func TestPlayerFoldsAfterReraise(t *testing.T) {
 		}
 	}()
 	v := <-done
-	want := finishedHand{winner: p1, chips: smallBlind + 3}
+	want := finishedHand{winner: p1, chips: (2*smallBlind) + 3}
 	if v != want {
 		t.Errorf("expected %v but got %v", want, v)
 	}
@@ -552,6 +552,22 @@ func TestRaiseByLessThanRequiredBetDueReturnsError(t *testing.T) {
 		t.Error(err)
 	}
 	if err := playRaise(h, p2, 1); err == nil {
+		t.Error()
+	}
+}
+
+func TestRaiseAtSameValueAsRequiredBetDueReturnsError(t *testing.T) {
+	p1 := newPlayer(initial)
+	p2 := newPlayer(initial)
+	players := []*player{p1, p2}
+
+	done := make(chan finishedHand)
+	h, _ := newHand(done, players, p1)
+
+	if err := playRaise(h, p1, 2); err != nil {
+		t.Error(err)
+	}
+	if err := playRaise(h, p2, 2); err == nil {
 		t.Error()
 	}
 }

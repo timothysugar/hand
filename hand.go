@@ -109,7 +109,7 @@ func (h *hand) activePlayersAt(startIdx int, endIdx int) ([]*player, error) {
 
 func initialGameState(ps []*player, blinds []int) (stage, error) {
 	if len(blinds) == 0 {
-		return flop{}, nil
+		return newFlopState(ps), nil
 	}
 	return newPreflop(ps, blinds)
 }
@@ -122,6 +122,15 @@ type betTooLowError struct {
 
 func (e betTooLowError) Error() string {
 	return fmt.Sprintf("bet of %d played by %v is too low; %d required", e.betAmount, e.player, e.requiredAmount)
+}
+
+type unexpectedBetAmountError struct {
+	player         player
+	betAmount      int
+}
+
+func (e unexpectedBetAmountError) Error() string {
+	return fmt.Sprintf("bet of %d played by %v is unexpected", e.betAmount, e.player)
 }
 
 type outOfTurnError struct {
@@ -204,10 +213,13 @@ func (h *hand) call(p *player) error {
 }
 
 func (h *hand) raise(p *player, bet int) error {
-	// req := h.pot.required(*p)
-	// if req != 0 {
-	// 	return errors.New("cannot check when required is not zero")
-	// }
+	req := h.pot.required(*p)
+	if bet < req {
+		return betTooLowError{*p, bet, req}
+	}
+	if bet == req {
+		return unexpectedBetAmountError{*p, bet}
+	}
 	h.pot.add(p, bet)
 	return nil
 }
