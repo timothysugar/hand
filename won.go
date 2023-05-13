@@ -23,7 +23,7 @@ func (curr won) requiredBet(h *hand, p *player) int {
 
 type pHand struct {
 	player *player
-	cards []card
+	cards  []card
 }
 
 func (pHand) rank() int {
@@ -47,7 +47,7 @@ func (curr won) enter(h *hand) error {
 	}
 	sort.Sort(byHand(pHands))
 
-	h.finish(finishedHand{ pHands[0].player, h.pot.total()})
+	h.finish(finishedHand{pHands[0].player, h.pot.total()})
 	return nil
 }
 

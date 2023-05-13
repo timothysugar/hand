@@ -3,9 +3,9 @@ package hand
 import "errors"
 
 type bettingStage struct {
-	initial []*player
-	plays   []input
-	numCards int
+	initial       []*player
+	plays         []input
+	numCards      int
 	makeCurrStage func(bettingStage) stage
 	makeNextStage func([]*player) stage
 }
@@ -17,7 +17,7 @@ func newBettingStage(
 	nextStageFact func([]*player) stage,
 ) bettingStage {
 	plays := make([]input, 0)
-	return bettingStage{activePlayers, plays, numCards, curr, nextStageFact} 
+	return bettingStage{activePlayers, plays, numCards, curr, nextStageFact}
 }
 
 func (bs bettingStage) requiredBet(h *hand, p *player) int {
@@ -52,7 +52,7 @@ func (bs bettingStage) handleInput(h *hand, p *player, inp input) (stage, error)
 	case Check:
 		err = h.check(p)
 	case Raise:
-		// todo
+		err = h.raise(p, inp.chips)
 	default:
 		return nil, errors.New("unsupported input")
 	}

@@ -17,9 +17,9 @@ type hand struct {
 	pot        pot
 }
 
-type finishedHand struct{
+type finishedHand struct {
 	winner *player
-	chips int
+	chips  int
 }
 
 func newHand(ch chan finishedHand, ps []*player, dealer *player, blinds ...int) (*hand, error) {
@@ -200,5 +200,14 @@ func (h *hand) check(p *player) error {
 func (h *hand) call(p *player) error {
 	req := h.pot.required(*p)
 	h.pot.add(p, req)
+	return nil
+}
+
+func (h *hand) raise(p *player, bet int) error {
+	// req := h.pot.required(*p)
+	// if req != 0 {
+	// 	return errors.New("cannot check when required is not zero")
+	// }
+	h.pot.add(p, bet)
 	return nil
 }

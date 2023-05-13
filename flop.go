@@ -18,4 +18,3 @@ func newFlopState(remaining []*player) flop {
 func (curr flop) id() string {
 	return "flop"
 }
-
