@@ -48,9 +48,9 @@ func (bs bettingStage) handleInput(h *hand, p *player, inp input) (stage, error)
 			return newWon(remaining), nil
 		}
 	case Call:
-		err = h.doCall(p)
+		err = h.call(p)
 	case Check:
-		err = h.doCheck(p)
+		err = h.check(p)
 	case Raise:
 		// todo
 	default:

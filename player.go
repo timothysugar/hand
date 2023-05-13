@@ -19,3 +19,7 @@ func newPlayer(chips int) *player {
 func (p *player) String() string {
 	return p.id
 }
+
+func (p *player) bet(amount int) {
+	p.chips = p.chips - amount
+}

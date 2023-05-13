@@ -188,3 +188,17 @@ func (h *hand) fold(p *player) ([]*player, error) {
 
 	return ret, nil
 }
+
+func (h *hand) check(p *player) error {
+	req := h.pot.required(*p)
+	if req != 0 {
+		return errors.New("cannot check when required is not zero")
+	}
+	return nil
+}
+
+func (h *hand) call(p *player) error {
+	req := h.pot.required(*p)
+	h.pot.add(p, req)
+	return nil
+}
