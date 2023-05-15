@@ -4,11 +4,11 @@ type river struct {
 	bettingStage
 }
 
-func newRiverState(remaining []*player) river {
+func newRiverState(remaining []*Player) river {
 	curr := func(bs bettingStage) stage {
 		return river{bs}
 	}
-	next := func(remaining []*player) stage {
+	next := func(remaining []*Player) stage {
 		return newWon(remaining)
 	}
 	bs := newBettingStage(remaining, 5, curr, next)

@@ -2,21 +2,21 @@ package hand
 
 type stage interface {
 	id() string
-	enter(h *hand) error
-	handleInput(h *hand, p *player, inp input) (stage, error)
-	requiredBet(h *hand, p *player) int
-	exit(h *hand) error
+	enter(h *Hand) error
+	handleInput(h *Hand, p *Player, inp Input) (stage, error)
+	requiredBet(h *Hand, p *Player) int
+	exit(h *Hand) error
 }
 
-type input struct {
-	action action
-	chips  int
+type Input struct {
+	Action Action
+	Chips  int
 }
 
-type action int
+type Action int
 
 const (
-	Undefined action = iota
+	Undefined Action = iota
 	Blind
 	Check
 	Fold

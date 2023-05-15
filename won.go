@@ -6,10 +6,10 @@ import (
 )
 
 type won struct {
-	ps []*player
+	ps []*Player
 }
 
-func newWon(remaining []*player) won {
+func newWon(remaining []*Player) won {
 	return won{remaining}
 }
 
@@ -17,12 +17,12 @@ func (curr won) id() string {
 	return "won"
 }
 
-func (curr won) requiredBet(h *hand, p *player) int {
+func (curr won) requiredBet(h *Hand, p *Player) int {
 	return h.pot.required(*p)
 }
 
 type pHand struct {
-	player *player
+	player *Player
 	cards  []card
 }
 
@@ -33,7 +33,7 @@ func (p byHand) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func (p byHand) Less(i, j int) bool { return false } // TODO: Sort by rank rather than deterministic sorting
 
-func (curr won) enter(h *hand) error {
+func (curr won) enter(h *Hand) error {
 	// evaluate hands
 	var pHands []pHand
 	for _, v := range h.players {
@@ -42,14 +42,14 @@ func (curr won) enter(h *hand) error {
 	}
 	sort.Sort(byHand(pHands))
 
-	h.finish(finishedHand{pHands[0].player, h.pot.total()})
+	h.finish(FinishedHand{pHands[0].player, h.pot.total()})
 	return nil
 }
 
-func (curr won) exit(h *hand) error {
+func (curr won) exit(h *Hand) error {
 	return nil
 }
 
-func (curr won) handleInput(h *hand, p *player, inp input) (stage, error) {
+func (curr won) handleInput(h *Hand, p *Player, inp Input) (stage, error) {
 	return nil, errors.New("no action can be taken after winning")
 }

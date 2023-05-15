@@ -4,11 +4,11 @@ type turn struct {
 	bettingStage
 }
 
-func newTurnState(remaining []*player) turn {
+func newTurnState(remaining []*Player) turn {
 	curr := func(bs bettingStage) stage {
 		return turn{bs}
 	}
-	next := func(remaining []*player) stage {
+	next := func(remaining []*Player) stage {
 		return newRiverState(remaining)
 	}
 	bs := newBettingStage(remaining, 4, curr, next)

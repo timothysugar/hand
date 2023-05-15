@@ -3,11 +3,11 @@ package hand
 import "errors"
 
 type preflop struct {
-	blinds map[*player]blind
+	blinds map[*Player]blind
 }
 
-func newPreflop(remaining []*player, blinds []int) (preflop, error) {
-	bs := make(map[*player]blind)
+func newPreflop(remaining []*Player, blinds []int) (preflop, error) {
+	bs := make(map[*Player]blind)
 
 	for i, v := range remaining {
 		if i >= len(blinds) {
@@ -18,16 +18,16 @@ func newPreflop(remaining []*player, blinds []int) (preflop, error) {
 	return preflop{blinds: bs}, nil
 }
 
-func (curr preflop) requiredBet(h *hand, p *player) int {
+func (curr preflop) requiredBet(h *Hand, p *Player) int {
 	blind := curr.blinds[p]
 	return blind.required
 }
 
-func (curr preflop) enter(h *hand) error {
+func (curr preflop) enter(h *Hand) error {
 	return nil
 }
 
-func (curr preflop) exit(h *hand) error {
+func (curr preflop) exit(h *Hand) error {
 	next, err := h.activePlayerAt(len(curr.blinds))
 	if err != nil {
 		return err
@@ -40,12 +40,12 @@ func (curr preflop) id() string {
 	return "preflop"
 }
 
-func (curr preflop) handleInput(h *hand, p *player, inp input) (stage, error) {
-	switch inp.action {
+func (curr preflop) handleInput(h *Hand, p *Player, inp Input) (stage, error) {
+	switch inp.Action {
 	case Blind:
 		blinds := curr.blinds
 		blind := blinds[p]
-		b, err := blind.play(inp.chips)
+		b, err := blind.play(inp.Chips)
 		if err != nil {
 			return nil, err
 		}
