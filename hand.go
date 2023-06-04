@@ -22,7 +22,8 @@ type FinishedHand struct {
 	chips  int
 }
 
-func NewHand(ch chan FinishedHand, ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
+func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
+	ch := make(chan FinishedHand)
 	if len(ps) <= 1 {
 		return nil, errors.New("hand requires at least 2 players")
 	}
@@ -41,6 +42,10 @@ func NewHand(ch chan FinishedHand, ps []*Player, dealer *Player, blinds ...int) 
 		return nil, err
 	}
 	return &Hand{players: sortedPs, pot: newPot(), dealer: dealer, stage: state, nextToPlay: dealer, finished: ch}, nil
+}
+
+func (h *Hand) Begin() chan FinishedHand {
+	return h.finished
 }
 
 func (h *Hand) finish(fh FinishedHand) {

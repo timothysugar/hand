@@ -21,15 +21,16 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
-	fin := make(chan hand.FinishedHand, 1)
 	initial := 10
 	p1 := hand.NewPlayer(initial)
 	p2 := hand.NewPlayer(initial)
 	players := []*hand.Player{p1, p2}
 	var h *hand.Hand
+	var fin chan hand.FinishedHand
 	var err error
 	go func() {
-		h, err = hand.NewHand(fin, players, p1, 1)
+		h, err = hand.NewHand(players, p1, 1)
+		fin = h.Begin()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
