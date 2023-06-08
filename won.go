@@ -53,3 +53,7 @@ func (curr won) exit(h *Hand) error {
 func (curr won) handleInput(h *Hand, p *Player, inp Input) (stage, error) {
 	return nil, errors.New("no action can be taken after winning")
 }
+
+func (curr won) validMoves(h *Hand) map[string][]Move {
+	return make(map[string][]Move)
+}

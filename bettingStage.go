@@ -73,3 +73,20 @@ func (bs bettingStage) handleInput(h *Hand, p *Player, inp Input) (stage, error)
 func (bs bettingStage) allPlayed(pot pot) bool {
 	return (len(bs.plays) >= len(bs.initial) && !pot.outstandingStake())
 }
+
+func (bs bettingStage) validMoves(h *Hand) map[string][]Move {
+	pms := make(map[string][]Move)
+	mvs := make([]Move, 0)
+	plyr := h.nextToPlay
+	mvs = append(mvs, NewMove(Fold, RequiredBet{})) // fold
+	req := h.pot.required(*plyr)
+	if req == 0 {
+		mvs = append(mvs, NewMove(Check, RequiredBet{})) // check
+		mvs = append(mvs, NewMove(Raise, NewMinumumBet(req))) // raise
+	} else {
+		mvs = append(mvs, NewMove(Call, NewExactBet(req))) // call
+		mvs = append(mvs, NewMove(Raise, NewMinumumBet(req))) // raise
+	}
+	pms[plyr.id] = mvs
+	return pms
+}

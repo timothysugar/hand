@@ -1,10 +1,12 @@
+//go:generate stringer -type=Action
+
 package hand
 
 type stage interface {
 	id() string
 	enter(h *Hand) error
 	handleInput(h *Hand, p *Player, inp Input) (stage, error)
-	validMoves(h *Hand) []Move
+	validMoves(h *Hand) map[string][]Move
 	requiredBet(h *Hand, p *Player) int
 	exit(h *Hand) error
 }

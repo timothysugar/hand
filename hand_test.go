@@ -636,21 +636,89 @@ func TestRaiseAtSameValueAsRequiredBetDueReturnsError(t *testing.T) {
 	}
 }
 
-func TestValidMovesReturnsBlindInPreflop(t *testing.T) {
+func TestValidMovesInPreflopReturnsBlind(t *testing.T) {
 	p1 := NewPlayer(initial)
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
+	h, _ := NewHand(players, p1, smallBlind)
 
-	h, _ := NewHand(players, p1)
+	got := h.ValidMoves()
 
 	want := make(map[string][]Move)
 	moves := []Move{NewMove(Blind, NewExactBet(smallBlind))}
 	want[p1.id] = moves
-	got := h.ValidMoves()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("expected %v but got %v", want, got)
 	}
 }
+
+func TestValidMovesInFlopReturnsBettableMoves(t *testing.T) {
+	p1 := NewPlayer(initial)
+	p2 := NewPlayer(initial)
+	players := []*Player{p1, p2}
+	h, _ := NewHand(players, p1)
+
+	got := h.ValidMoves()
+
+	want := make(map[string][]Move)
+	moves := []Move{
+		NewMove(Fold, RequiredBet{}),
+		NewMove(Check, RequiredBet{}),
+		NewMove(Raise, NewMinumumBet(0)),
+	}
+	want[p1.id] = moves
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected %v but got %v", want, got)
+	}
+}
+
+func TestValidMovesInFlopWithOutstandingBetReturnsBettableMoves(t *testing.T) {
+	p1 := NewPlayer(initial)
+	p2 := NewPlayer(initial)
+	players := []*Player{p1, p2}
+	h, _ := NewHand(players, p1)
+	if err := playRaise(h, p1, 1); err != nil {
+		t.Error(err)
+	}
+
+	got := h.ValidMoves()
+
+	want := make(map[string][]Move)
+	moves := []Move{
+		NewMove(Fold, RequiredBet{}),
+		NewMove(Call, NewExactBet(1)),
+		NewMove(Raise, NewMinumumBet(1)),
+	}
+	want[p2.id] = moves
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected %v but got %v", want, got)
+	}
+}
+
+func TestNoValidMovesWhenGameWon(t *testing.T) {
+	p1 := NewPlayer(initial)
+	p2 := NewPlayer(initial)
+	players := []*Player{p1, p2}
+	h, _ := NewHand(players, p1)
+	done := h.Begin()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		<-done
+		wg.Done()
+	}()
+	if err := playFold(h, p1); err != nil {
+		t.Error(err)
+	}
+
+	got := h.ValidMoves()
+
+	want := make(map[string][]Move)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected %v but got %v", want, got)
+	}
+}
+
 
 func playBlind(h *Hand, p *Player) error {
 	req := h.stage.requiredBet(h, p)

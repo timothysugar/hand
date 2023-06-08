@@ -62,3 +62,10 @@ func (curr preflop) handleInput(h *Hand, p *Player, inp Input) (stage, error) {
 		return nil, errors.New("unsupported action in preflop")
 	}
 }
+
+func (curr preflop) validMoves(h *Hand) map[string][]Move {
+	mvs := make(map[string][]Move)
+	plyr := h.nextToPlay
+	mvs[plyr.id] = []Move{NewMove(Blind, NewExactBet(curr.blinds[plyr].required))}
+	return mvs
+}
