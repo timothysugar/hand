@@ -25,31 +25,29 @@ func main() {
 	p1 := hand.NewPlayer(initial)
 	p2 := hand.NewPlayer(initial)
 	players := []*hand.Player{p1, p2}
-	var h *hand.Hand
 	var fin chan hand.FinishedHand
-	var err error
+	h, err := hand.NewHand(players, p1, 1)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	go func() {
-		h, err = hand.NewHand(players, p1, 1)
 		fin = h.Begin()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
 	}()
 	ls := play(os.Stdin, h)
 
 	// Wait for CTRL-C or hand to finish
-	out:
+out:
 	for {
 		select {
 		case l := <-ls:
 			pIdx, inp, err := parseLine(l)
-			if (err != nil) { 
+			if err != nil {
 				fmt.Printf("Could not parse line %s", l)
 			}
 			p := players[pIdx]
 			err = h.HandleInput(p, inp)
-			if (err != nil) {
+			if err != nil {
 				fmt.Printf("Could not handle input, %v %v\n", inp, err)
 			} else {
 				fmt.Printf("Recieved input %v\n", l)
@@ -88,7 +86,7 @@ func parseLine(l string) (int, hand.Input, error) {
 		return 0, hand.Input{}, err
 	}
 
-	return int(pIdx), hand.Input{a, int(c)}, nil
+	return int(pIdx), hand.Input{Action: a, Chips: int(c)}, nil
 }
 
 func parseAction(r rune) (hand.Action, error) {
@@ -112,6 +110,8 @@ func play(r io.Reader, h *hand.Hand) <-chan string {
 	lines := make(chan string)
 	go func() {
 		defer close(lines)
+		mvs := h.ValidMoves()
+		fmt.Println("Valid moves: ", mvs)
 		scan := bufio.NewScanner(r)
 		fmt.Print("Enter an action: [<player><action><chips>]")
 		for scan.Scan() {

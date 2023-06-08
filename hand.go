@@ -48,6 +48,10 @@ func (h *Hand) Begin() chan FinishedHand {
 	return h.finished
 }
 
+func (h *Hand) ValidMoves() []Move {
+	return make([]Move, 0)
+}
+
 func (h *Hand) finish(fh FinishedHand) {
 	h.finished <- fh
 	close(h.finished)

@@ -4,6 +4,7 @@ type stage interface {
 	id() string
 	enter(h *Hand) error
 	handleInput(h *Hand, p *Player, inp Input) (stage, error)
+	validMoves(h *Hand) []Move
 	requiredBet(h *Hand, p *Player) int
 	exit(h *Hand) error
 }

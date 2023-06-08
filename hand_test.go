@@ -1,6 +1,7 @@
 package hand
 
 import (
+	"reflect"
 	"sync"
 	"testing"
 )
@@ -632,6 +633,22 @@ func TestRaiseAtSameValueAsRequiredBetDueReturnsError(t *testing.T) {
 	}
 	if err := playRaise(h, p2, 2); err == nil {
 		t.Error()
+	}
+}
+
+func TestValidMovesReturnsBlindInPreflop(t *testing.T) {
+	p1 := NewPlayer(initial)
+	p2 := NewPlayer(initial)
+	players := []*Player{p1, p2}
+
+	h, _ := NewHand(players, p1)
+
+	want := make(map[string][]Move)
+	moves := []Move{NewMove(Blind, NewExactBet(smallBlind))}
+	want[p1.id] = moves
+	got := h.ValidMoves()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected %v but got %v", want, got)
 	}
 }
 
