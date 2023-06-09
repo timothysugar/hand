@@ -155,6 +155,7 @@ func TestAllPlayersCallTheBlind(t *testing.T) {
 	players := []*Player{p1, p2, p3}
 
 	h, _ := NewHand(players, p1, smallBlind, bigBlind)
+	h.Begin()
 
 	// preflop
 	if p1.chips != initial {
@@ -211,8 +212,8 @@ func TestOneFoldsAndOneCallsBlind(t *testing.T) {
 	p2 := NewPlayer(initial)
 	p3 := NewPlayer(initial)
 	players := []*Player{p1, p2, p3}
-
 	h, _ := NewHand(players, p1, smallBlind)
+	h.Begin()
 
 	if p1.chips != initial {
 		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)
@@ -258,6 +259,7 @@ func TestOneFoldsAndOneChecksBlind(t *testing.T) {
 	players := []*Player{p1, p2, p3}
 
 	h, _ := NewHand(players, p1, smallBlind)
+	h.Begin()
 
 	if p1.chips != initial {
 		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)
@@ -314,16 +316,20 @@ func TestCheckWhenBetDueReturnsError(t *testing.T) {
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
 
-	h, _ := NewHand(players, p1, smallBlind)
-
 	var err error
+	h, err := NewHand(players, p1, smallBlind)
+	if err != nil {
+		t.Error(err)
+	}
+	h.Begin()
+
 	err = playBlind(h, p1)
 	if err != nil {
-		t.Error()
+		t.Error(err)
 	}
 	err = playCheck(h, p2)
 	if err == nil {
-		t.Error()
+		t.Error(err)
 	}
 }
 
@@ -331,11 +337,11 @@ func TestBlindsPlayedFromDealer(t *testing.T) {
 	p1 := NewPlayer(initial)
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2} // p2 is not the first in order
-
 	h, err := NewHand(players, p2, smallBlind)
 	if err != nil {
 		t.Error(err)
 	}
+	h.Begin()
 
 	err = playBlind(h, p2)
 	if err != nil {
@@ -350,7 +356,6 @@ func TestBlindsPlayedInWrongOrderReturnsError(t *testing.T) {
 	p1 := NewPlayer(initial)
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
-
 	h, _ := NewHand(players, p1, smallBlind)
 
 	err := playBlind(h, p2)
@@ -364,8 +369,8 @@ func TestSamePlayerCallsImmediatelyAfterBlindReturnsError(t *testing.T) {
 	p1 := NewPlayer(initial)
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
-
 	h, _ := NewHand(players, p1, smallBlind)
+	h.Begin()
 
 	var err error
 	err = playBlind(h, p1)
@@ -384,8 +389,8 @@ func TestSecondCallInWrongOrderReturnsError(t *testing.T) {
 	p2 := NewPlayer(initial)
 	p3 := NewPlayer(initial)
 	players := []*Player{p1, p2, p3}
-
 	h, _ := NewHand(players, p1, smallBlind)
+	h.Begin()
 
 	var err error
 	err = playBlind(h, p1)
@@ -610,8 +615,8 @@ func TestRaiseByLessThanRequiredBetDueReturnsError(t *testing.T) {
 	p1 := NewPlayer(initial)
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
-
 	h, _ := NewHand(players, p1)
+	h.Begin()
 
 	if err := playRaise(h, p1, 2); err != nil {
 		t.Error(err)
@@ -625,8 +630,8 @@ func TestRaiseAtSameValueAsRequiredBetDueReturnsError(t *testing.T) {
 	p1 := NewPlayer(initial)
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
-
 	h, _ := NewHand(players, p1)
+	h.Begin()
 
 	if err := playRaise(h, p1, 2); err != nil {
 		t.Error(err)
@@ -641,6 +646,7 @@ func TestValidMovesInPreflopReturnsBlind(t *testing.T) {
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
 	h, _ := NewHand(players, p1, smallBlind)
+	h.Begin()
 
 	got := h.ValidMoves()
 
@@ -657,6 +663,7 @@ func TestValidMovesInFlopReturnsBettableMoves(t *testing.T) {
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
 	h, _ := NewHand(players, p1)
+	h.Begin()
 
 	got := h.ValidMoves()
 
@@ -677,6 +684,7 @@ func TestValidMovesInFlopWithOutstandingBetReturnsBettableMoves(t *testing.T) {
 	p2 := NewPlayer(initial)
 	players := []*Player{p1, p2}
 	h, _ := NewHand(players, p1)
+	h.Begin()
 	if err := playRaise(h, p1, 1); err != nil {
 		t.Error(err)
 	}
@@ -719,6 +727,19 @@ func TestNoValidMovesWhenGameWon(t *testing.T) {
 	}
 }
 
+func TestNoValidMovesBeforeGameBegins(t *testing.T) {
+	p1 := NewPlayer(initial)
+	p2 := NewPlayer(initial)
+	players := []*Player{p1, p2}
+	h, _ := NewHand(players, p1)
+
+	got := h.ValidMoves()
+
+	want := make(map[string][]Move)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected %v but got %v", want, got)
+	}
+}
 
 func playBlind(h *Hand, p *Player) error {
 	req := h.stage.requiredBet(h, p)

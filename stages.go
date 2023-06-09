@@ -3,11 +3,11 @@
 package hand
 
 type stage interface {
-	id() string
+	id() string // TODO: remove this and rely on type switch
 	enter(h *Hand) error
 	handleInput(h *Hand, p *Player, inp Input) (stage, error)
 	validMoves(h *Hand) map[string][]Move
-	requiredBet(h *Hand, p *Player) int
+	requiredBet(h *Hand, p *Player) int // TODO: remove this - only used in tests
 	exit(h *Hand) error
 }
 

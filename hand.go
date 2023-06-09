@@ -22,7 +22,15 @@ type FinishedHand struct {
 	chips  int
 }
 
+// NewHand creates a new hand with the given players, dealer, and blinds. The dealer is a pointer to a
+// player in the hand and represents the position of the dealer at the table. The blinds are optional and
+// represent the blinds assigned to players from the dealer.
+// After creating a hand, it would be typical to call Begin() to begin the hand, and to receive from the
+// channel that is returned. 
 func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
+	// TODO: validate dealer is in ps
+	// TODO: validate blinds are positive
+	// TODO: validate blinds are less than or equal to the number of players
 	ch := make(chan FinishedHand)
 	if len(ps) <= 1 {
 		return nil, errors.New("hand requires at least 2 players")
@@ -41,15 +49,43 @@ func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Hand{players: sortedPs, pot: newPot(), dealer: dealer, stage: state, nextToPlay: dealer, finished: ch}, nil
+	return &Hand{players: sortedPs, pot: newPot(), dealer: dealer, stage: state, finished: ch}, nil
 }
 
+// Begin begins the hand and returns a channel into which the hand result will be sent when the hand is finished.
 func (h *Hand) Begin() chan FinishedHand {
+	h.playFromDealer()
 	return h.finished
 }
 
+// ValidMoves returns a map of valid moves for all active players.
 func (h *Hand) ValidMoves() map[string][]Move {
+	if h.nextToPlay == nil {
+		return make(map[string][]Move)
+	}
 	return h.stage.validMoves(h)
+}
+
+func (h *Hand) HandleInput(p *Player, inp Input) error {
+	if p != h.nextToPlay {
+		return &outOfTurnError{p, h.nextToPlay}
+	}
+	s, err := h.stage.handleInput(h, p, inp)
+	if err != nil {
+		return err
+	}
+	if s != nil {
+		if s.id() != h.stage.id() {
+			h.stage.exit(h)
+			s.enter(h)
+		} else {
+			h.nextMove()
+		}
+		h.stage = s
+		return nil
+	}
+	h.nextMove()
+	return nil
 }
 
 func (h *Hand) finish(fh FinishedHand) {
@@ -164,28 +200,6 @@ func (h *Hand) nextMove() {
 		}
 	}
 	h.nextToPlay = h.players[(playIdx+1)%len(h.players)]
-}
-
-func (h *Hand) HandleInput(p *Player, inp Input) error {
-	if p != h.nextToPlay {
-		return &outOfTurnError{p, h.nextToPlay}
-	}
-	s, err := h.stage.handleInput(h, p, inp)
-	if err != nil {
-		return err
-	}
-	if s != nil {
-		if s.id() != h.stage.id() {
-			h.stage.exit(h)
-			s.enter(h)
-		} else {
-			h.nextMove()
-		}
-		h.stage = s
-		return nil
-	}
-	h.nextMove()
-	return nil
 }
 
 func (h *Hand) fold(p *Player) ([]*Player, error) {
