@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/timothysugar/hand"
+	"github.com/timothysugar/hand/pkg/hand"
 )
 
 func main() {
