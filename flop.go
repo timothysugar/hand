@@ -14,7 +14,3 @@ func newFlopState(remaining []*Player) flop {
 	bs := newBettingStage(remaining, 3, curr, next)
 	return flop{bs}
 }
-
-func (curr flop) id() string {
-	return "flop"
-}

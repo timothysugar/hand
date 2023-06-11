@@ -14,7 +14,3 @@ func newTurnState(remaining []*Player) turn {
 	bs := newBettingStage(remaining, 4, curr, next)
 	return turn{bs}
 }
-
-func (curr turn) id() string {
-	return "turn"
-}

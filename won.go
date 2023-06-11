@@ -13,10 +13,6 @@ func newWon(remaining []*Player) won {
 	return won{remaining}
 }
 
-func (curr won) id() string {
-	return "won"
-}
-
 func (curr won) requiredBet(h *Hand, p *Player) int {
 	return h.pot.required(*p)
 }

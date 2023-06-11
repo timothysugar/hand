@@ -14,7 +14,3 @@ func newRiverState(remaining []*Player) river {
 	bs := newBettingStage(remaining, 5, curr, next)
 	return river{bs}
 }
-
-func (curr river) id() string {
-	return "river"
-}

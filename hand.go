@@ -75,7 +75,9 @@ func (h *Hand) HandleInput(p *Player, inp Input) error {
 		return err
 	}
 	if s != nil {
-		if s.id() != h.stage.id() {
+		curr := fmt.Sprintf("%T", s)
+		new := fmt.Sprintf("%T", h.stage)
+		if (curr != new) {
 			h.stage.exit(h)
 			s.enter(h)
 		} else {

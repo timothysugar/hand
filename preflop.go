@@ -36,10 +36,6 @@ func (curr preflop) exit(h *Hand) error {
 	return nil
 }
 
-func (curr preflop) id() string {
-	return "preflop"
-}
-
 func (curr preflop) handleInput(h *Hand, p *Player, inp Input) (stage, error) {
 	switch inp.Action {
 	case Blind:
