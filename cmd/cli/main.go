@@ -43,7 +43,7 @@ out:
 		time.Sleep(time.Millisecond * 100)
 		mvs := h.ValidMoves()
 		fmt.Println("Valid moves: ", mvs)
-		fmt.Println("Enter an action: [<player><action><chips>]")
+		fmt.Printf("Enter an action: [<player index><action><chips>]\ne.g. 0b1⏎ 1f0⏎\n")
 		select {
 		case l := <-ls:
 			fmt.Println("Received line")
