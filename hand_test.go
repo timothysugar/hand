@@ -31,7 +31,7 @@ func TestPenultimatePlayerFolds(t *testing.T) {
 }
 
 func TestPenultimatePlayerFoldsFromBlind(t *testing.T) {
-	th := createMinimalHand(t)
+	th := createMinimalHandWithBlind(t)
 	if err := playBlind(th.h, th.p1); err != nil {
 		t.Error(err)
 	}
