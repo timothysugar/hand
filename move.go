@@ -19,4 +19,5 @@ func NewExactBet(i int) RequiredBet {
 func NewMinumumBet(min int) RequiredBet {
 	return RequiredBet{Minimum: min, Maximum: math.MaxInt32}
 }
+
 func NewMove(a Action, b RequiredBet) Move { return Move{a, b} }

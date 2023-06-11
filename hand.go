@@ -26,12 +26,12 @@ type FinishedHand struct {
 // player in the hand and represents the position of the dealer at the table. The blinds are optional and
 // represent the blinds assigned to players from the dealer.
 // After creating a hand, it would be typical to call Begin() to begin the hand, and to receive from the
-// channel that is returned. 
+// channel that is returned.
 func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
 	// TODO: validate dealer is in ps
 	// TODO: validate blinds are positive
 	// TODO: validate blinds are less than or equal to the number of players
-	ch := make(chan FinishedHand)
+	ch := make(chan FinishedHand, 1)
 	if len(ps) <= 1 {
 		return nil, errors.New("hand requires at least 2 players")
 	}

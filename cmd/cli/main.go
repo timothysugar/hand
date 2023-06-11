@@ -39,19 +39,23 @@ func main() {
 	// Wait for CTRL-C or hand to finish
 out:
 	for {
+		mvs := h.ValidMoves()
+		fmt.Println("Valid moves: ", mvs)
+		fmt.Println("Enter an action: [<player><action><chips>]")
 		select {
 		case l := <-ls:
+			fmt.Println("Received line")
 			pIdx, inp, err := parseLine(l)
 			if err != nil {
 				fmt.Printf("Could not parse line %s", l)
 			}
 			p := players[pIdx]
-			err = h.HandleInput(p, inp)
-			if err != nil {
-				fmt.Printf("Could not handle input, %v %v\n", inp, err)
-			} else {
-				fmt.Printf("Recieved input %v\n", l)
-			}
+				err = h.HandleInput(p, inp)
+				if err != nil {
+					fmt.Printf("Could not handle input, %v, %v\n", inp, err)
+				} else {
+					fmt.Printf("Received input %v\n", l)
+				}
 		case result := <-fin:
 			fmt.Printf("Hand finished with %v\n", result)
 			break out
@@ -64,7 +68,7 @@ out:
 		}
 	}
 
-	fmt.Println("exiting")
+	fmt.Println("Exiting")
 }
 
 func parseLine(l string) (int, hand.Input, error) {
@@ -110,10 +114,7 @@ func play(r io.Reader, h *hand.Hand) <-chan string {
 	lines := make(chan string)
 	go func() {
 		defer close(lines)
-		mvs := h.ValidMoves()
-		fmt.Println("Valid moves: ", mvs)
 		scan := bufio.NewScanner(r)
-		fmt.Print("Enter an action: [<player><action><chips>]")
 		for scan.Scan() {
 			s := scan.Text()
 			lines <- s
