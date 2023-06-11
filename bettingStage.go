@@ -79,7 +79,7 @@ func (bs bettingStage) validMoves(h *Hand) map[string][]Move {
 	mvs := make([]Move, 0)
 	plyr := h.nextToPlay
 	mvs = append(mvs, NewMove(Fold, RequiredBet{})) // fold
-	req := h.pot.required(*plyr)
+	req := bs.requiredBet(h, plyr)
 	if req == 0 {
 		mvs = append(mvs, NewMove(Check, RequiredBet{}))      // check
 		mvs = append(mvs, NewMove(Raise, NewMinumumBet(req))) // raise

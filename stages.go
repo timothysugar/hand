@@ -6,7 +6,7 @@ type stage interface {
 	enter(h *Hand) error
 	handleInput(h *Hand, p *Player, inp Input) (stage, error)
 	validMoves(h *Hand) map[string][]Move
-	requiredBet(h *Hand, p *Player) int // TODO: remove this - only used in tests
+	requiredBet(h *Hand, p *Player) int
 	exit(h *Hand) error
 }
 
