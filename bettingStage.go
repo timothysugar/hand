@@ -13,11 +13,11 @@ type bettingStage struct {
 func newBettingStage(
 	activePlayers []*Player,
 	numCards int,
-	curr func(bettingStage) stage,
+	currStageFact func(bettingStage) stage,
 	nextStageFact func([]*Player) stage,
 ) bettingStage {
 	plays := make([]Input, 0)
-	return bettingStage{activePlayers, plays, numCards, curr, nextStageFact}
+	return bettingStage{activePlayers, plays, numCards, currStageFact, nextStageFact}
 }
 
 func (bs bettingStage) requiredBet(h *Hand, p *Player) int {
