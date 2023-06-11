@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"time"
 
 	"github.com/timothysugar/hand"
 )
@@ -39,6 +40,7 @@ func main() {
 	// Wait for CTRL-C or hand to finish
 out:
 	for {
+		time.Sleep(time.Millisecond * 100)
 		mvs := h.ValidMoves()
 		fmt.Println("Valid moves: ", mvs)
 		fmt.Println("Enter an action: [<player><action><chips>]")
