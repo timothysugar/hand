@@ -40,7 +40,7 @@ func main() {
 	// Wait for CTRL-C or hand to finish
 out:
 	for {
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 100) //TODO: use a channel to send valid move updates
 		mvs := h.ValidMoves()
 		fmt.Println("Valid moves: ", mvs)
 		fmt.Printf("Enter an action: [<player index><action><chips>]\ne.g. 0b1⏎ 1f0⏎\n")
