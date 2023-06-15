@@ -1,27 +1,18 @@
-<!doctype html>
-<html lang='en'>
+{{template "layout.go.html" .}}
 
-<head>
-  <meta charset='utf-8'>
-  <title>Poker Hand</title>
-  <script src="https://unpkg.com/htmx.org@1.9.2" async></script>
-</head>
-
-<body>
-  <header>
-    <h1><a href='/table/{{.TableId}}/hand/{{.HandId}}'>Hand</a></h1>
-  </header>
-  <main>
-    <div>
-      <h2>Opponents</h2>
-      {{ template "opponentPositions" .Opponents }}
-    </div>
-    <div>
-      <h2>Player</h2>
-      {{ template "player" .Player }}
-    </div>
-  </main>
-  <footer>Source at <a href='https://github.com/timothysugar/hand'>Github</a></footer>
-</body>
-
-</html>
+{{define "content"}}
+<header>
+  <h1><a href='/table/{{.TableId}}/hand/{{.HandId}}'>Hand</a></h1>
+</header>
+<main>
+  <div>
+    <h2>Opponents</h2>
+    {{ template "opponentPositions" .Opponents }}
+  </div>
+  <div>
+    <h2>Player</h2>
+    {{ template "player" .Player }}
+  </div>
+</main>
+<footer>Source at <a href='https://github.com/timothysugar/hand'>Github</a></footer>
+{{ end }}

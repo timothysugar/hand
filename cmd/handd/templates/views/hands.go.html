@@ -1,0 +1,15 @@
+{{template "layout.go.html" .}}
+
+{{define "content"}}
+<header>
+  <h1>Hands</h1>
+</header>
+<main>
+  <div>
+    <ul>
+      {{ range . }}<li><a href="{{ . }}">{{ . }}</a></li>{{ end }}
+    </ul>
+  </div>
+  {{ end }}
+</main>
+<footer>Source at <a href='https://github.com/timothysugar/hand'>Github</a></footer>

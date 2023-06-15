@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
-	ts "github.com/timothysugar/hand/cmd/handd/templates"
+	"github.com/timothysugar/hand/cmd/handd/templates"
 	"github.com/timothysugar/hand/pkg/hand"
 )
 
@@ -20,17 +19,16 @@ type PlayerViewModel struct {
 
 const (
 	initialChips = 1000
+	tableId	  = "table1"
 )
 
 var h *hand.Hand
 var me *hand.Player
-var baseTmpl *template.Template
-var templates *ts.Template
+var ts *templates.Template
 
 func init() {
 	log.Println("Initializing hand")
-	templates = ts.New()
-	baseTmpl = template.Must(template.ParseFiles("web/base.go.html"))
+	ts = templates.New()
 
 	bill := hand.NewPlayer("Bill", initialChips)
 	bill.Cards = []hand.Card{
@@ -117,6 +115,19 @@ func createHandViewModel(playerId string, tableId string, handId string) (templa
 }
 
 func getHandsHandler(w http.ResponseWriter, req *http.Request) {
+	handIds := []string{ h.Id }
+	var links = make([]string, len(handIds))
+	for i, v := range handIds {
+		links[i] = fmt.Sprintf("/table/%s/hand/%s", tableId, v)
+	}
+	
+	name := "hands.go.html"
+	err := ts.Render(w, name, links)
+	if err != nil {
+		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, name, links)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func getHandHandler(w http.ResponseWriter, req *http.Request) {
@@ -128,24 +139,13 @@ func getHandHandler(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Error creating hand view model for request with URL:%s, %v\n", req.URL, err)
 		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	var tmplFiles = []string{
-		"web/base.go.html",
-		"web/hand.go.html",
-		"web/player.go.html",
-		"web/opponentPositions.go.html",
-	}
-
-	contentTmpl, err := template.New("main").ParseFiles(tmplFiles...)
-	if err != nil {
-		log.Printf("Error parsing template files %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = contentTmpl.Execute(w, vm)
+
+	name := "hand.go.html"
+	err = ts.Render(w, name, vm)
 	if err != nil {
-		log.Printf("Error executing template with data, err: %v, template: %v, data: %v", err, contentTmpl, vm)
+		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, name, vm)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -176,18 +176,10 @@ func blindHandler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	var tmplFiles = []string{
-		"web/player.go.html",
-	}
-	tmpl, err := template.ParseFiles(tmplFiles...)
+	name := "player.go.html"
+	err = ts.Render(w, name, vm)
 	if err != nil {
-		log.Printf("Error parsing template files %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = tmpl.Execute(w, vm)
-	if err != nil {
-		log.Printf("Error executing template with data, err: %v, template: %v, data: %v", err, tmpl, vm)
+		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, name, vm)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
