@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang='en'>
+
+<head>
+    <meta charset='utf-8'>
+    <title>Poker Hand</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2" async></script>
+</head>
+
+<body>
+    <header>
+        <h1><a href='/table/{{.TableId}}/hand/{{.HandId}}'>Hand</a></h1>
+    </header>
+    <main>
+        <div class="main">{{block "content" .}}{{end}}</div>
+    </main>
+    <footer>Source at <a href='https://github.com/timothysugar/hand'>Github</a></footer>
+</body>
+
+</html>

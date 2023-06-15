@@ -1,0 +1,12 @@
+{{ define "opponentPositions" }}
+{{ range . }}
+<div class="opponent">
+        <h4>{{ .Name }}</h2>
+                <p>Chips: {{ .Chips }}</p>
+                <p>Bet: {{ .Bet }}</p>
+                {{ range .FaceDownCards }}
+                <span>face down card</span>
+                {{ end }}
+</div>
+{{ end }}
+{{ end }}

@@ -25,7 +25,7 @@ func (bs bettingStage) requiredBet(h *Hand, p *Player) int {
 }
 
 func (bs bettingStage) enter(h *Hand) error {
-	existing := len(h.cards)
+	existing := len(h.Cards)
 	if existing < bs.numCards {
 		h.tableCard(bs.numCards - existing)
 	}
@@ -87,6 +87,6 @@ func (bs bettingStage) validMoves(h *Hand) map[string][]Move {
 		mvs = append(mvs, NewMove(Call, NewExactBet(req)))    // call
 		mvs = append(mvs, NewMove(Raise, NewMinumumBet(req))) // raise
 	}
-	pms[plyr.id] = mvs
+	pms[plyr.Id] = mvs
 	return pms
 }

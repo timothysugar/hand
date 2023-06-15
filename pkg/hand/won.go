@@ -19,7 +19,7 @@ func (curr won) requiredBet(h *Hand, p *Player) int {
 
 type pHand struct {
 	player *Player
-	cards  []card
+	cards  []Card
 }
 
 type byHand []pHand
@@ -33,7 +33,7 @@ func (curr won) enter(h *Hand) error {
 	// evaluate hands
 	var pHands []pHand
 	for _, v := range h.players {
-		pH := pHand{v, append(h.cards, v.cards...)}
+		pH := pHand{v, append(h.Cards, v.Cards...)}
 		pHands = append(pHands, pH)
 	}
 	sort.Sort(byHand(pHands))

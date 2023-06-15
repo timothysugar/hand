@@ -63,6 +63,6 @@ func (curr preflop) validMoves(h *Hand) map[string][]Move {
 	mvs := make(map[string][]Move)
 	plyr := h.nextToPlay
 	req := curr.requiredBet(h, plyr)
-	mvs[plyr.id] = []Move{NewMove(Blind, NewExactBet(req))}
+	mvs[plyr.Id] = []Move{NewMove(Blind, NewExactBet(req))}
 	return mvs
 }

@@ -12,7 +12,7 @@ func newPot() pot {
 
 func (p pot) add(pl *Player, amount int) {
 	pl.bet(amount)
-	p.contribs[pl.id] += amount
+	p.contribs[pl.Id] += amount
 }
 
 func (p pot) total() int {
@@ -48,7 +48,7 @@ func (p pot) outstandingStake() bool {
 }
 
 func (p pot) required(pl Player) int {
-	curr := p.contribs[pl.id]
+	curr := p.contribs[pl.Id]
 	max := p.maxStake()
 	return max - curr
 }

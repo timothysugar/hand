@@ -1,25 +1,30 @@
 package hand
 
-import "github.com/rs/xid"
+import (
+	"github.com/rs/xid"
+)
 
 type Player struct {
-	id     string
-	chips  int
-	cards  []card
-	folded bool
+	Id     string
+	Name   string
+	Chips  int
+	Cards  []Card
+	Folded bool
 }
 
-func NewPlayer(chips int) *Player {
+func NewPlayer(name string, chips int) *Player {
+	id := xid.New().String()
 	return &Player{
-		id:    xid.New().String(),
-		chips: chips,
+		Id:    id,
+		Name:  name,
+		Chips: chips,
 	}
 }
 
 func (p *Player) String() string {
-	return p.id
+	return p.Id
 }
 
 func (p *Player) bet(amount int) {
-	p.chips = p.chips - amount
+	p.Chips = p.Chips - amount
 }

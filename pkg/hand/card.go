@@ -1,4 +1,6 @@
 package hand
 
-type card struct {
+type Card struct {
+	Suit string
+	Rank string
 }

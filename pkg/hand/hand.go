@@ -4,15 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/rs/xid"
 )
 
 type Hand struct {
+	Id         string
 	players    []*Player
 	m          sync.RWMutex
 	finished   chan FinishedHand
 	dealer     *Player
 	nextToPlay *Player
-	cards      []card
+	Cards      []Card
 	stage      stage
 	pot        pot
 }
@@ -28,6 +31,7 @@ type FinishedHand struct {
 // After creating a hand, it would be typical to call Begin() to begin the hand, and to receive from the
 // channel that is returned.
 func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
+	id := xid.New().String()
 	// TODO: validate dealer is in ps
 	// TODO: validate blinds are positive
 	// TODO: validate blinds are less than or equal to the number of players
@@ -49,7 +53,7 @@ func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Hand{players: sortedPs, pot: newPot(), dealer: dealer, stage: state, finished: ch}, nil
+	return &Hand{Id: id, players: sortedPs, pot: newPot(), dealer: dealer, stage: state, finished: ch}, nil
 }
 
 // Begin begins the hand and returns a channel into which the hand result will be sent when the hand is finished.
@@ -58,12 +62,51 @@ func (h *Hand) Begin() chan FinishedHand {
 	return h.finished
 }
 
+// Players returns the player denoted by the given ID and all opponents of that player in the hand. If the player
+// is not found in the hand, an error is returned.
+func (h *Hand) Players(id string) (self *Player, opponents []*Player, err error) {
+	for _, v := range h.players {
+		if v.Id == id {
+			self = v
+		} else {
+			opponents = append(opponents, v)
+		}
+	}
+	if self == nil {
+		return nil, nil, errors.New("player not found in hand")
+	}
+
+	return self, opponents, nil
+}
+
+func (h *Hand) IsNextToPlay(playerId string) bool {
+	if h.nextToPlay == nil {
+		return false
+	}
+	return h.nextToPlay.Id == playerId
+}
+
 // ValidMoves returns a map of valid moves for all active players.
 func (h *Hand) ValidMoves() map[string][]Move {
 	if h.nextToPlay == nil {
 		return make(map[string][]Move)
 	}
 	return h.stage.validMoves(h)
+}
+
+func (h *Hand) PlayBlind(player string, amount int) error {
+	var p *Player
+	for _, v := range h.players {
+		if v.Id == player {
+			p = v
+			break
+		}
+	}
+	if p == nil {
+		return errors.New("player not found in hand")
+	}
+	return h.HandleInput(p, Input{Action: Blind, Chips: amount})
+
 }
 
 func (h *Hand) HandleInput(p *Player, inp Input) error {
@@ -77,7 +120,7 @@ func (h *Hand) HandleInput(p *Player, inp Input) error {
 	if s != nil {
 		curr := fmt.Sprintf("%T", s)
 		new := fmt.Sprintf("%T", h.stage)
-		if (curr != new) {
+		if curr != new {
 			h.stage.exit(h)
 			s.enter(h)
 		} else {
@@ -105,7 +148,7 @@ func (h *Hand) activePlayers() []*Player {
 
 	var active []*Player
 	for _, v := range h.players {
-		if !v.folded {
+		if !v.Folded {
 			active = append(active, v)
 		}
 	}
@@ -135,7 +178,7 @@ func (h *Hand) activePlayersAt(startIdx int, endIdx int) ([]*Player, error) {
 		if v == h.dealer {
 			dIdx = len(active)
 		}
-		if !v.folded {
+		if !v.Folded {
 			active = append(active, v)
 		}
 	}
@@ -190,8 +233,8 @@ func (e outOfTurnError) Error() string {
 }
 
 func (h *Hand) tableCard(num int) {
-	cs := make([]card, num)
-	h.cards = append(h.cards, cs...)
+	cs := make([]Card, num)
+	h.Cards = append(h.Cards, cs...)
 }
 
 func (h *Hand) nextMove() {

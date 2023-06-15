@@ -83,7 +83,7 @@ func TestBlindPlayerCannotCall(t *testing.T) {
 }
 
 func TestHandRequiresTwoPlayers(t *testing.T) {
-	p1 := NewPlayer(initial)
+	p1 := createPlayer()
 	players := []*Player{p1}
 
 	_, err := NewHand(players, p1)
@@ -93,10 +93,21 @@ func TestHandRequiresTwoPlayers(t *testing.T) {
 	}
 }
 
+func TestPlayerNotInHandCannotPlayMove(t *testing.T) {
+	th := createMinimalHand(t)
+
+	p := createPlayer() // not in hand
+	err := th.h.PlayBlind(p.Id, 1)
+
+	if err == nil {
+		t.Error("Player not in hand playing move should return error but did not")
+	}
+}
+
 func TestAllPlayersCallTheBlind(t *testing.T) {
-	p1 := NewPlayer(initial)
-	p2 := NewPlayer(initial)
-	p3 := NewPlayer(initial)
+	p1 := createPlayer()
+	p2 := createPlayer()
+	p3 := createPlayer()
 	players := []*Player{p1, p2, p3}
 
 	var err error
@@ -107,28 +118,27 @@ func TestAllPlayersCallTheBlind(t *testing.T) {
 	h.Begin()
 
 	// preflop
-	if p1.chips != initial {
-		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)
+	if p1.Chips != initial {
+		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.Chips)
 	}
-	if p2.chips != initial {
-		t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.chips)
+	if p2.Chips != initial {
+		t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.Chips)
 	}
-	if p3.chips != initial {
-		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.chips)
+	if p3.Chips != initial {
+		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.Chips)
 	}
-	err = playBlind(h, p1)
-	if err != nil {
+	if err = playBlind(h, p1); err != nil {
 		t.Error(err)
 	}
-	if p1.chips != (initial - smallBlind) {
-		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.chips)
+	if p1.Chips != (initial - smallBlind) {
+		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.Chips)
 	}
 	err = playBlind(h, p2)
 	if err != nil {
 		t.Error(err)
 	}
-	if p2.chips != (initial - bigBlind) {
-		t.Errorf("Player 2 should have %d chips after playing blind but has %d", initial-bigBlind, p2.chips)
+	if p2.Chips != (initial - bigBlind) {
+		t.Errorf("Player 2 should have %d chips after playing blind but has %d", initial-bigBlind, p2.Chips)
 	}
 
 	// flop
@@ -136,29 +146,29 @@ func TestAllPlayersCallTheBlind(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if p3.chips != (initial - bigBlind) {
-		t.Errorf("Player 3 should have %d chips after calling but has %d", initial-bigBlind, p3.chips)
+	if p3.Chips != (initial - bigBlind) {
+		t.Errorf("Player 3 should have %d chips after calling but has %d", initial-bigBlind, p3.Chips)
 	}
 	err = playCall(h, p1)
 	if err != nil {
 		t.Error(err)
 	}
-	if p1.chips != (initial - bigBlind) {
-		t.Errorf("Player 1 should have %d chips after calling but has %d", initial-bigBlind, p1.chips)
+	if p1.Chips != (initial - bigBlind) {
+		t.Errorf("Player 1 should have %d chips after calling but has %d", initial-bigBlind, p1.Chips)
 	}
 	err = playCheck(h, p2)
 	if err != nil {
 		t.Error(err)
 	}
-	if p2.chips != (initial - bigBlind) {
-		t.Errorf("Player 2 should have %d chips after calling but has %d", initial-bigBlind, p2.chips)
+	if p2.Chips != (initial - bigBlind) {
+		t.Errorf("Player 2 should have %d chips after calling but has %d", initial-bigBlind, p2.Chips)
 	}
 }
 
 func TestOneFoldsAndOneCallsBlind(t *testing.T) {
-	p1 := NewPlayer(initial)
-	p2 := NewPlayer(initial)
-	p3 := NewPlayer(initial)
+	p1 := createPlayer()
+	p2 := createPlayer()
+	p3 := createPlayer()
 	players := []*Player{p1, p2, p3}
 	var err error
 	h, err := NewHand(players, p1, smallBlind)
@@ -167,20 +177,20 @@ func TestOneFoldsAndOneCallsBlind(t *testing.T) {
 	}
 	h.Begin()
 
-	if p1.chips != initial {
-		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)
+	if p1.Chips != initial {
+		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.Chips)
 	}
-	if p2.chips != initial {
-		t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.chips)
+	if p2.Chips != initial {
+		t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.Chips)
 	}
-	if p3.chips != initial {
-		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.chips)
+	if p3.Chips != initial {
+		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.Chips)
 	}
 	if err = playBlind(h, p1); err != nil {
 		t.Error(err)
 	}
-	if p1.chips != (initial - smallBlind) {
-		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.chips)
+	if p1.Chips != (initial - smallBlind) {
+		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.Chips)
 	}
 	if err = playFold(h, p2); err != nil {
 		t.Error(err)
@@ -188,21 +198,21 @@ func TestOneFoldsAndOneCallsBlind(t *testing.T) {
 	if err = playCall(h, p3); err != nil {
 		t.Error(err)
 	}
-	if p3.chips != (initial - smallBlind) {
-		t.Errorf("Player 3 should have %d chips after calling but has %d", initial-smallBlind, p3.chips)
+	if p3.Chips != (initial - smallBlind) {
+		t.Errorf("Player 3 should have %d chips after calling but has %d", initial-smallBlind, p3.Chips)
 	}
 	if err = playCall(h, p1); err != nil {
 		t.Error(err)
 	}
-	if p1.chips != (initial - smallBlind) {
-		t.Errorf("Player 1 should have %d chips after calling but has %d", initial-smallBlind, p1.chips)
+	if p1.Chips != (initial - smallBlind) {
+		t.Errorf("Player 1 should have %d chips after calling but has %d", initial-smallBlind, p1.Chips)
 	}
 }
 
 func TestOneFoldsAndOneChecksBlind(t *testing.T) {
-	p1 := NewPlayer(initial)
-	p2 := NewPlayer(initial)
-	p3 := NewPlayer(initial)
+	p1 := createPlayer()
+	p2 := createPlayer()
+	p3 := createPlayer()
 	players := []*Player{p1, p2, p3}
 
 	var err error
@@ -212,20 +222,20 @@ func TestOneFoldsAndOneChecksBlind(t *testing.T) {
 	}
 	h.Begin()
 
-	if p1.chips != initial {
-		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.chips)
+	if p1.Chips != initial {
+		t.Errorf("Player 1 should have %d chips before playing blind but has %d", initial, p1.Chips)
 	}
-	if p2.chips != initial {
-		t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.chips)
+	if p2.Chips != initial {
+		t.Errorf("Player 2 should have %d chips before playing blind but has %d", initial, p2.Chips)
 	}
-	if p3.chips != initial {
-		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.chips)
+	if p3.Chips != initial {
+		t.Errorf("Player 3 should have %d chips before playing blind but has %d", initial, p3.Chips)
 	}
 	if err = playBlind(h, p1); err != nil {
 		t.Error(err)
 	}
-	if p1.chips != (initial - smallBlind) {
-		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.chips)
+	if p1.Chips != (initial - smallBlind) {
+		t.Errorf("Player 1 should have %d chips after playing blind but has %d", initial-smallBlind, p1.Chips)
 	}
 	if err = playFold(h, p2); err != nil {
 		t.Error(err)
@@ -233,14 +243,14 @@ func TestOneFoldsAndOneChecksBlind(t *testing.T) {
 	if err = playCall(h, p3); err != nil {
 		t.Error(err)
 	}
-	if p3.chips != (initial - smallBlind) {
-		t.Errorf("Player 3 should have %d chips after calling but has %d", initial-smallBlind, p3.chips)
+	if p3.Chips != (initial - smallBlind) {
+		t.Errorf("Player 3 should have %d chips after calling but has %d", initial-smallBlind, p3.Chips)
 	}
 	if err = playCheck(h, p1); err != nil {
 		t.Error(err)
 	}
-	if p1.chips != (initial - smallBlind) {
-		t.Errorf("Player 1 should have %d chips after checking but has %d", initial-smallBlind, p1.chips)
+	if p1.Chips != (initial - smallBlind) {
+		t.Errorf("Player 1 should have %d chips after checking but has %d", initial-smallBlind, p1.Chips)
 	}
 }
 
@@ -264,8 +274,8 @@ func TestCheckWhenBetDueReturnsError(t *testing.T) {
 }
 
 func TestBlindsPlayedFromDealer(t *testing.T) {
-	p1 := NewPlayer(initial)
-	p2 := NewPlayer(initial)
+	p1 := createPlayer()
+	p2 := createPlayer()
 	players := []*Player{p1, p2} // p2 is not the first in order
 	h, err := NewHand(players, p2, smallBlind)
 	if err != nil {
@@ -276,8 +286,8 @@ func TestBlindsPlayedFromDealer(t *testing.T) {
 	if err = playBlind(h, p2); err != nil {
 		t.Error(err)
 	}
-	if p2.chips != initial-smallBlind {
-		t.Errorf("Player has unexpected number of chips %d", p2.chips)
+	if p2.Chips != initial-smallBlind {
+		t.Errorf("Player has unexpected number of chips %d", p2.Chips)
 	}
 }
 
@@ -302,9 +312,9 @@ func TestSamePlayerCallsImmediatelyAfterBlindReturnsError(t *testing.T) {
 }
 
 func TestSecondCallInWrongOrderReturnsError(t *testing.T) {
-	p1 := NewPlayer(initial)
-	p2 := NewPlayer(initial)
-	p3 := NewPlayer(initial)
+	p1 := createPlayer()
+	p2 := createPlayer()
+	p3 := createPlayer()
 	players := []*Player{p1, p2, p3}
 	h, _ := NewHand(players, p1, smallBlind)
 	h.Begin()
@@ -327,7 +337,7 @@ func TestProgressingThroughStagesIncrementsNumOfCardsInHand(t *testing.T) {
 
 	// preflop
 	var numCards int
-	numCards = len(th.h.cards)
+	numCards = len(th.h.Cards)
 	if numCards != 0 {
 		t.Errorf("unexpected number of cards, got %d", numCards)
 	}
@@ -336,7 +346,7 @@ func TestProgressingThroughStagesIncrementsNumOfCardsInHand(t *testing.T) {
 	}
 
 	// flop
-	numCards = len(th.h.cards)
+	numCards = len(th.h.Cards)
 	if numCards != 3 {
 		t.Errorf("unexpected number of cards, got %d", numCards)
 	}
@@ -344,7 +354,7 @@ func TestProgressingThroughStagesIncrementsNumOfCardsInHand(t *testing.T) {
 		t.Error(err)
 	}
 	// outstanding action in flop so should not advance stage
-	numCards = len(th.h.cards)
+	numCards = len(th.h.Cards)
 	if numCards != 3 {
 		t.Errorf("unexpected number of cards, got %d", numCards)
 	}
@@ -353,7 +363,7 @@ func TestProgressingThroughStagesIncrementsNumOfCardsInHand(t *testing.T) {
 	}
 
 	// turn
-	numCards = len(th.h.cards)
+	numCards = len(th.h.Cards)
 	if numCards != 4 {
 		t.Errorf("unexpected number of cards, got %d", numCards)
 	}
@@ -365,7 +375,7 @@ func TestProgressingThroughStagesIncrementsNumOfCardsInHand(t *testing.T) {
 	}
 
 	// river
-	numCards = len(th.h.cards)
+	numCards = len(th.h.Cards)
 	if numCards != 5 {
 		t.Errorf("unexpected number of cards, got %d", numCards)
 	}
@@ -461,7 +471,7 @@ func TestValidMovesInPreflopReturnsBlind(t *testing.T) {
 
 	want := make(map[string][]Move)
 	moves := []Move{NewMove(Blind, NewExactBet(smallBlind))}
-	want[th.p1.id] = moves
+	want[th.p1.Id] = moves
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("expected %v but got %v", want, got)
 	}
@@ -478,7 +488,7 @@ func TestValidMovesInFlopReturnsBettableMoves(t *testing.T) {
 		NewMove(Check, RequiredBet{}),
 		NewMove(Raise, NewMinumumBet(0)),
 	}
-	want[th.p1.id] = moves
+	want[th.p1.Id] = moves
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("expected %v but got %v", want, got)
 	}
@@ -498,7 +508,7 @@ func TestValidMovesInFlopWithOutstandingBetReturnsBettableMoves(t *testing.T) {
 		NewMove(Call, NewExactBet(1)),
 		NewMove(Raise, NewMinumumBet(1)),
 	}
-	want[th.p2.id] = moves
+	want[th.p2.Id] = moves
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("expected %v but got %v", want, got)
 	}
@@ -519,8 +529,8 @@ func TestNoValidMovesWhenGameWon(t *testing.T) {
 }
 
 func TestNoValidMovesBeforeGameBegins(t *testing.T) {
-	p1 := NewPlayer(initial)
-	p2 := NewPlayer(initial)
+	p1 := createPlayer()
+	p2 := createPlayer()
 	players := []*Player{p1, p2}
 	h, _ := NewHand(players, p1)
 
@@ -532,16 +542,75 @@ func TestNoValidMovesBeforeGameBegins(t *testing.T) {
 	}
 }
 
+func TestGetPlayersReturnsPlayerAndOpponents(t *testing.T) {
+	th := createMinimalHand(t)
+
+	self, opponents, err := th.h.Players(th.p1.Id)
+	if err != nil {
+		t.Error(err)
+	}
+	if self != th.p1 {
+		t.Errorf("expected %v but got %v", th.p1, self)
+	}
+	if len(opponents) != 1 && opponents[0] != th.p2 {
+		t.Errorf("expected %v but got %v", th.p2, opponents)
+	}
+}
+
+func TestIsNextToPlayReturnsFalseBeforeGameBegins(t *testing.T) {
+	p1 := createPlayer()
+	p2 := createPlayer()
+	players := []*Player{p1, p2}
+	h, err := NewHand(players, p1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var p1Next = h.IsNextToPlay(p1.Id)
+	var p2Next = h.IsNextToPlay(p2.Id)
+
+	if !(!p1Next && !p2Next) {
+		t.Error("expected no one is next to play before hand begins")
+	}
+}
+
+func TestIsNextToPlayIteratesFromDealerWhenGameBegins(t *testing.T) {
+	th := createMinimalHand(t)
+
+	var p1Next = th.h.IsNextToPlay(th.p1.Id)
+	var p2Next = th.h.IsNextToPlay(th.p2.Id)
+
+	if !(p1Next && !p2Next) {
+		t.Error("expected play to start from dealer but did not")
+	}
+
+	playCheck(th.h, th.p2) // out of order move should not change next to play
+	p1Next = th.h.IsNextToPlay(th.p1.Id)
+	p2Next = th.h.IsNextToPlay(th.p2.Id)
+
+	if !(p1Next && !p2Next) {
+		t.Error("expected play invalid move not to increment next to play")
+	}
+
+	playCheck(th.h, th.p1)
+	p1Next = th.h.IsNextToPlay(th.p1.Id)
+	p2Next = th.h.IsNextToPlay(th.p2.Id)
+
+	if !(p2Next && !p1Next) {
+		t.Error("expected play to increment from dealer for each move played")
+	}
+}
+
 type testHand struct {
-    h    *Hand
-    p1   *Player
-    p2  *Player
+	h   *Hand
+	p1  *Player
+	p2  *Player
 	fin chan FinishedHand
 }
 
 func createMinimalHand(t *testing.T) testHand {
-	p1 := NewPlayer(initial)
-	p2 := NewPlayer(initial)
+	p1 := createPlayer()
+	p2 := createPlayer()
 	players := []*Player{p1, p2}
 	h, err := NewHand(players, p1)
 	if err != nil {
@@ -553,8 +622,8 @@ func createMinimalHand(t *testing.T) testHand {
 }
 
 func createMinimalHandWithBlind(t *testing.T) testHand {
-	p1 := NewPlayer(initial)
-	p2 := NewPlayer(initial)
+	p1 := createPlayer()
+	p2 := createPlayer()
 	players := []*Player{p1, p2}
 	h, err := NewHand(players, p1, smallBlind)
 	if err != nil {
@@ -565,9 +634,13 @@ func createMinimalHandWithBlind(t *testing.T) testHand {
 	return testHand{h, p1, p2, fin}
 }
 
+func createPlayer() *Player {
+	return NewPlayer("some name", initial)
+}
+
 func playBlind(h *Hand, p *Player) error {
 	req := h.stage.requiredBet(h, p)
-	return h.HandleInput(p, Input{Action: Blind, Chips: req})
+	return h.PlayBlind(p.Id, req)
 }
 
 func playFold(h *Hand, p *Player) error {

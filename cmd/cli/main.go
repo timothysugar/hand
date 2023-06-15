@@ -23,8 +23,8 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 
 	initial := 10
-	p1 := hand.NewPlayer(initial)
-	p2 := hand.NewPlayer(initial)
+	p1 := hand.NewPlayer("p1", initial)
+	p2 := hand.NewPlayer("p2", initial)
 	players := []*hand.Player{p1, p2}
 	var fin chan hand.FinishedHand
 	h, err := hand.NewHand(players, p1, 1)
@@ -52,12 +52,12 @@ out:
 				fmt.Printf("Could not parse line %s", l)
 			}
 			p := players[pIdx]
-				err = h.HandleInput(p, inp)
-				if err != nil {
-					fmt.Printf("Could not handle input, %v, %v\n", inp, err)
-				} else {
-					fmt.Printf("Received input %v\n", l)
-				}
+			err = h.HandleInput(p, inp)
+			if err != nil {
+				fmt.Printf("Could not handle input, %v, %v\n", inp, err)
+			} else {
+				fmt.Printf("Received input %v\n", l)
+			}
 		case result := <-fin:
 			fmt.Printf("Hand finished with %v\n", result)
 			break out

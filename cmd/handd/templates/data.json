@@ -1,0 +1,70 @@
+{
+    "HandId": "2",
+    "TableId": "1",
+    "Opponents": [
+        {
+            "Name": "Jujube",
+            "Chips": 200,
+            "Bet": 20,
+            "Active": true,
+            "Folded": false,
+            "FaceDownCards": [
+                null,
+                null
+            ]
+        },
+        {
+            "Name": "Zephyr",
+            "Chips": 200,
+            "Bet": 20,
+            "Active": false,
+            "Folded": true,
+            "FaceDownCards": [
+                null,
+                null
+            ]
+        }
+    ],
+    "Player": {
+        "Id": "ci4ql0tfcls37ri0cc60",
+        "HandId": "1234",
+        "Name": "",
+        "Chips": 0,
+        "Bet": 0,
+        "Active": false,
+        "Folded": false,
+        "Cards": [
+            {
+                "Suit": "Spades",
+                "Rank": "Ace"
+            },
+            {
+                "Suit": "Clubs",
+                "Rank": "Ace"
+            }
+        ],
+        "Moves": [
+            {
+                "Action": "Fold",
+                "Bet": {
+                    "Minimum": 0,
+                    "Maximum": 0
+                }
+            },
+            {
+                "Action": "Call",
+                "Bet": {
+                    "Minimum": 20,
+                    "Maximum": 20
+                }
+            },
+            {
+                "Action": "Raise",
+                "Bet": {
+                    "Minimum": 40,
+                    "Maximum": 40
+                }
+            }
+        ]
+    }
+}
