@@ -1,0 +1,15 @@
+{{template "layout.go.html" .}}
+
+{{define "content"}}
+<header>
+  <h1>Sign up to play</h1>
+</header>
+<main>
+  <div>
+    <form hx-boost="true" action="/players" method="post">
+      <input name="name" type="name" placeholder="Enter name..." autofocus>
+      <button>Submit</button>
+    </form>
+  </div>
+</main>
+{{ end }}

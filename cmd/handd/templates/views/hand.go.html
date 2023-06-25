@@ -5,6 +5,7 @@
   <h1><a href='/table/{{.TableId}}/hand/{{.HandId}}'>Hand</a></h1>
 </header>
 <main>
+  <button hx-post="/table/{{.TableId}}/hand/{{.HandId}}/begin" hx-target="#player" hx-swap="outerHTML">Begin</button>
   <div>
     <h2>Opponents</h2>
     {{ template "opponentPositions" .Opponents }}
@@ -14,5 +15,4 @@
     {{ template "player" .Player }}
   </div>
 </main>
-<footer>Source at <a href='https://github.com/timothysugar/hand'>Github</a></footer>
 {{ end }}

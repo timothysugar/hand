@@ -3,9 +3,9 @@ package templates
 import "github.com/timothysugar/hand/pkg/hand"
 
 type PlayerViewModel struct {
-	Id     string
+	Id      string
 	TableId string
-	HandId string
+	HandId  string
 	Entrant
 	Cards []hand.Card
 	Moves []hand.Move
