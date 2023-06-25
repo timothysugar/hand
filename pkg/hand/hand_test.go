@@ -1,8 +1,11 @@
 package hand
 
 import (
+	"fmt"
+	"math/rand"
 	"reflect"
 	"testing"
+	"time"
 )
 
 const (
@@ -101,6 +104,42 @@ func TestPlayerNotInHandCannotPlayMove(t *testing.T) {
 
 	if err == nil {
 		t.Error("Player not in hand playing move should return error but did not")
+	}
+}
+
+func TestPlayerCanJoinAHand(t *testing.T) {
+	p1 := createPlayer()
+	p2 := createPlayer()
+	players := []*Player{p1, p2}
+	h, err := NewHand(players, p1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	p3 := createPlayer()
+
+	if err := h.Join(p3, initial); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestPlayerJoiningAHandWithADuplicateNameReturnsError(t *testing.T) {
+	p1 := createPlayer()
+	p2 := createPlayer()
+	players := []*Player{p1, p2}
+	h, err := NewHand(players, p1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	p3 := NewPlayer("Twin", initial)
+	p4 := NewPlayer("Twin", initial)
+
+	if err := h.Join(p3, initial); err != nil {
+		t.Error(err)
+	}
+	if err := h.Join(p4, initial); err == nil {
+		t.Error(err)
 	}
 }
 
@@ -542,13 +581,18 @@ func TestNoValidMovesBeforeGameBegins(t *testing.T) {
 	}
 }
 
+func TestCallingBeginTwiceReturnsError(t *testing.T) {
+	th := createMinimalHand(t)
+
+	if _, err := th.h.Begin(); err == nil {
+		t.Error("Expected error for calling begin twice but none received")
+	}
+}
+
 func TestGetPlayersReturnsPlayerAndOpponents(t *testing.T) {
 	th := createMinimalHand(t)
 
-	self, opponents, err := th.h.Players(th.p1.Id)
-	if err != nil {
-		t.Error(err)
-	}
+	self, opponents := th.h.Players(th.p1.Id)
 	if self != th.p1 {
 		t.Errorf("expected %v but got %v", th.p1, self)
 	}
@@ -601,6 +645,40 @@ func TestIsNextToPlayIteratesFromDealerWhenGameBegins(t *testing.T) {
 	}
 }
 
+func TestIsActiveReturnsFalseBeforeGameBegins(t *testing.T) {
+	p1 := createPlayer()
+	p2 := createPlayer()
+	players := []*Player{p1, p2}
+	h, err := NewHand(players, p1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if h.IsActive() {
+		t.Error("Expected hand to be inactive before game begins")
+	}
+}
+
+func TestIsActiveReturnsTrueAfterGameBegins(t *testing.T) {
+	th := createMinimalHand(t)
+
+	if !th.h.IsActive() {
+		t.Error("Expected hand to be active after game begins")
+	}
+}
+
+func TestIsActiveReturnsFalseAfterGameEnds(t *testing.T) {
+	th := createMinimalHand(t)
+
+	if err := playFold(th.h, th.p1); err != nil {
+		t.Error("Error should be nil")
+	}
+
+	if !th.h.IsActive() {
+		t.Error("Expected hand to be active after game ends")
+	}
+}
+
 type testHand struct {
 	h   *Hand
 	p1  *Player
@@ -616,7 +694,10 @@ func createMinimalHand(t *testing.T) testHand {
 	if err != nil {
 		t.Error(err)
 	}
-	fin := h.Begin()
+	fin, err := h.Begin()
+	if err != nil {
+		t.Error(err)
+	}
 
 	return testHand{h, p1, p2, fin}
 }
@@ -629,13 +710,24 @@ func createMinimalHandWithBlind(t *testing.T) testHand {
 	if err != nil {
 		t.Error(err)
 	}
-	fin := h.Begin()
+	fin, err := h.Begin()
+	if err != nil {
+		t.Error(err)
+	}
 
 	return testHand{h, p1, p2, fin}
 }
 
 func createPlayer() *Player {
-	return NewPlayer("some name", initial)
+	name := randomString(10)
+	return NewPlayer(name, initial)
+}
+
+func randomString(length int) string {
+    r := rand.New(rand.NewSource(time.Now().UnixNano()))
+    b := make([]byte, length+2)
+	r.Read(b)
+    return fmt.Sprintf("%x", b)[2 : length+2]
 }
 
 func playBlind(h *Hand, p *Player) error {

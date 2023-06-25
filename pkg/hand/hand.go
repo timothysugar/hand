@@ -57,14 +57,31 @@ func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
 }
 
 // Begin begins the hand and returns a channel into which the hand result will be sent when the hand is finished.
-func (h *Hand) Begin() chan FinishedHand {
+func (h *Hand) Begin() (chan FinishedHand, error) {
+	if (h.IsActive()) {
+		return nil, errors.New("hand already active so cannot begin")
+	}	
 	h.playFromDealer()
-	return h.finished
+	return h.finished, nil
 }
 
-// Players returns the player denoted by the given ID and all opponents of that player in the hand. If the player
-// is not found in the hand, an error is returned.
-func (h *Hand) Players(id string) (self *Player, opponents []*Player, err error) {
+func (h *Hand) IsActive() bool {
+	return h.nextToPlay != nil
+}
+
+// Join adds a player to the hand. If the hand has already begun, an error is returned.
+func (h *Hand) Join(player *Player, chips int) error {
+	for _, v := range h.players {
+		if v.Name == player.Name {
+			return errors.New("duplicate player name")
+		}
+	}
+	h.players = append(h.players, player)
+	return nil
+}
+
+// Players returns the player denoted by the given ID and all opponents of that player in the hand
+func (h *Hand) Players(id string) (self *Player, opponents []*Player) {
 	for _, v := range h.players {
 		if v.Id == id {
 			self = v
@@ -72,11 +89,8 @@ func (h *Hand) Players(id string) (self *Player, opponents []*Player, err error)
 			opponents = append(opponents, v)
 		}
 	}
-	if self == nil {
-		return nil, nil, errors.New("player not found in hand")
-	}
 
-	return self, opponents, nil
+	return self, opponents
 }
 
 func (h *Hand) IsNextToPlay(playerId string) bool {
