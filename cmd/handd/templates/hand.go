@@ -5,4 +5,5 @@ type HandViewModel struct {
 	TableId   string
 	Opponents []OpponentViewModel
 	Player    PlayerViewModel
+	IsActive bool
 }

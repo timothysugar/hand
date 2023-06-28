@@ -23,9 +23,13 @@ func New() *Template {
 // https://stackoverflow.com/a/69244593
 func (t *Template) Render(w io.Writer, name string, data interface{}) error {
 	tmpl := template.Must(t.templates.Clone())
-	tmpl, err := tmpl.ParseFS(tmplFS, "views/"+name)
+	t1, err := tmpl.New("").ParseFS(tmplFS, "views/"+name)
 	if err != nil {
 		return err
 	}
-	return tmpl.ExecuteTemplate(w, name, data)
+	return t1.ExecuteTemplate(w, name, data)
+}
+
+func (t *Template) RenderPartial(w io.Writer, name string, data interface{}) error {
+	return t.templates.ExecuteTemplate(w, name, data)
 }

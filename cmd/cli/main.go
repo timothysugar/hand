@@ -33,7 +33,11 @@ func main() {
 		os.Exit(1)
 	}
 	go func() {
-		fin = h.Begin()
+		fin, err = h.Begin()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}()
 	ls := play(os.Stdin, h)
 

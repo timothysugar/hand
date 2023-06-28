@@ -18,7 +18,7 @@
           <h5>{{ .HandId }}</h5>
           {{ if and .Active .Joined }}
           <button><a href="{{ $handUrl }}">Playing (join)</a></button>
-          {{ else if not .Active }}
+          {{ else if .Active }}
           <h5>In progress</h5>
           {{ else }}
           <button hx-post="{{ $joinHandUrl }}">Join</button>

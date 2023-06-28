@@ -105,7 +105,6 @@ func init() {
 		me,
 	}
 	h, err = hand.NewHand(players, players[2], 10)
-	h.Begin()
 	if err != nil {
 		log.Fatalf("Error initializing hand: %s", err)
 	}
@@ -273,6 +272,7 @@ func createHandViewModel(playerId string, tableId string, handId string) (templa
 		TableId:   tableId,
 		Opponents: opponentsVM,
 		Player:    playerVM,
+		IsActive: h.IsActive(),
 	}, nil
 }
 
@@ -403,13 +403,23 @@ func beginHandHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	h.Begin()
+	if _, err := h.Begin(); err != nil {
+		log.Printf("Error beginning hand: %v\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	log.Printf("Hand %v begun by %v\n", h.Id, p)
 
-	vm := createPlayerViewModel(p, tableId, handId)
+	vm, err := createHandViewModel(p.Id, tableId, handId)
+	if err != nil {
+		log.Printf("Error creating hand view model for request with URL:%s, %v\n", req.URL, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	tmpl := "player.go.html"
-	err = ts.Render(w, tmpl, vm)
+	tmpl := "hand"
+	err = ts.RenderPartial(w, tmpl, vm)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, tmpl, vm)
 		w.WriteHeader(http.StatusInternalServerError)
