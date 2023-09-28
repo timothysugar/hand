@@ -3,6 +3,7 @@ package hand
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"sync"
 
 	"github.com/rs/xid"
@@ -15,6 +16,7 @@ type Hand struct {
 	finished   chan FinishedHand
 	dealer     *Player
 	nextToPlay *Player
+	deck	   Deck
 	Cards      []Card
 	stage      stage
 	pot        pot
@@ -30,7 +32,7 @@ type FinishedHand struct {
 // represent the blinds assigned to players from the dealer.
 // After creating a hand, it would be typical to call Begin() to begin the hand, and to receive from the
 // channel that is returned.
-func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
+func NewHand(ps []*Player, dealer *Player, source rand.Source, blinds ...int) (*Hand, error) {
 	id := xid.New().String()
 	// TODO: validate dealer is in ps
 	// TODO: validate blinds are positive
@@ -53,7 +55,7 @@ func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Hand{Id: id, players: sortedPs, pot: newPot(), dealer: dealer, stage: state, finished: ch}, nil
+	return &Hand{Id: id, players: sortedPs, pot: newPot(), deck: newDeck(source), dealer: dealer, stage: state, finished: ch}, nil
 }
 
 // Begin begins the hand and returns a channel into which the hand result will be sent when the hand is finished.
@@ -247,8 +249,9 @@ func (e outOfTurnError) Error() string {
 }
 
 func (h *Hand) tableCard(num int) {
-	cs := make([]Card, num)
-	h.Cards = append(h.Cards, cs...)
+	for i := 0; i < num; i++ {
+		h.Cards = append(h.Cards, h.deck.pop())
+	}
 }
 
 func (h *Hand) nextMove() {

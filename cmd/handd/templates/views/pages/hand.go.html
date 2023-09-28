@@ -1,0 +1,54 @@
+{{ define "content" }}
+<div id="hand-content">
+  <header>
+    <h1><a href='/table/{{.TableId}}/hand/{{.HandId}}'>Hand</a></h1>
+  </header>
+  <main>
+    {{ block "activeHand" . }}
+    {{ if not .IsActive }}
+    <button hx-post="/table/{{.TableId}}/hand/{{.HandId}}/begin" hx-target="#hand-content"
+      hx-swap="outerHTML">Begin</button>
+    {{ end }}
+    <div>
+      <h2>Opponents</h2>
+      {{ block "opponentPositions" .Opponents }}
+      {{ range . }}
+      <div {{ if .Active }}style="background: darkseagreen" {{ end }} class="opponent">
+        <h4>{{ .Name }}</h2>
+          <p>Chips: {{ .Chips }}</p>
+          <p>Bet: {{ .Bet }}</p>
+          {{ range .FaceDownCards }}
+          <span>face down card</span>
+          {{ end }}
+      </div>
+      {{ end }}
+      {{ end }}
+    </div>
+    <div>
+      <h2>Player</h2>
+      {{ block "player" .Player }}
+      {{$handId := .HandId}}
+      {{$playerId := .Id}}
+      <div id="player">
+        <h4>{{ .Name }}</h2>
+          <p>Chips: {{ .Chips }}</p>
+          <div class="bet">
+            {{ $createMoveUrl := printf "%s%s%s%s%s" "/hand/" $handId "/player/" $playerId "/moves/"}}
+            {{ range .Moves }}
+            Move
+            <button class="btn" hx-post="{{ $createMoveUrl }}{{ .Action }}{{if .Bet.Minimum}}/{{.Bet.Minimum}}{{end}}"
+              hx-target="#player" hx-swap="outerHTML">
+              {{.Action }}{{if .Bet.Minimum}} ({{.Bet.Minimum}}){{end}}
+            </button>
+            {{ end }}
+          </div>
+          {{ range .Cards }}
+          <span>card{{ .Rank }}{{ .Suit }}</span>
+          {{ end }}
+      </div>
+      {{ end }}
+      {{ end }}
+    </div>
+  </main>
+</div>
+{{ end }}

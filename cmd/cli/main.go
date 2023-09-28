@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"os/signal"
 	"strconv"
@@ -27,7 +28,8 @@ func main() {
 	p2 := hand.NewPlayer("p2", initial)
 	players := []*hand.Player{p1, p2}
 	var fin chan hand.FinishedHand
-	h, err := hand.NewHand(players, p1, 1)
+	source := rand.NewSource(time.Now().UnixNano())
+	h, err := hand.NewHand(players, p1, source, 1)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

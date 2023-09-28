@@ -2,34 +2,58 @@ package templates
 
 import (
 	"embed"
+	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
+	"log"
 )
 
-//go:embed views/*.html
+//go:embed views/pages/*.go.html views/layout.go.html
 var tmplFS embed.FS
 
-type Template struct {
-	templates *template.Template
+var tAll *template.Template
+var tPages map[string]*template.Template = make(map[string]*template.Template)
+
+func init() {
+    // Generate a template from everything to pick up all partials in all templates
+	tAll = template.Must(template.ParseFS(tmplFS, "views/pages/*.go.html", "views/layout.go.html"))
+	log.Println(tAll.DefinedTemplates())
+
+	// Walk the template filesystem
+	// for each file in pages, create a template with the content of the page file named "content"
+	// and with the template named the same as the page file
+	fs.WalkDir(tmplFS, "views/pages", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if (d.IsDir()) { return nil }
+		t := template.Must(template.New(d.Name()).ParseFS(tmplFS, "views/layout.go.html", path ))
+		log.Printf("templates defined in template named %s, path: %s: %s", t.Name(), path,  t.DefinedTemplates())
+		tPages[t.Name()] = t
+		return nil
+})
 }
 
-func New() *Template {
-	templates := template.Must(template.New("").ParseFS(tmplFS, "views/*.html"))
-	return &Template{
-		templates: templates,
+func RenderFragment(w io.Writer, name string, data interface{}) error {
+	log.Printf("rendering %v", name)
+	log.Println(tAll.DefinedTemplates())
+	
+	res := tAll.ExecuteTemplate(w, name, data)
+	log.Printf("rendered %s", name)
+	return res
+}
+
+func RenderPage(w io.Writer, pageName string, data interface{}) error {
+
+	t, ok := tPages[pageName]
+	if (!ok) {
+		return fmt.Errorf("template %s not found", pageName)
 	}
-}
+	log.Printf("rendering page %s, templates: %s, vm: %+v", pageName, t.DefinedTemplates(), data)
+	t.Execute(w, data)
 
-// https://stackoverflow.com/a/69244593
-func (t *Template) Render(w io.Writer, name string, data interface{}) error {
-	tmpl := template.Must(t.templates.Clone())
-	t1, err := tmpl.New("").ParseFS(tmplFS, "views/"+name)
-	if err != nil {
-		return err
-	}
-	return t1.ExecuteTemplate(w, name, data)
-}
-
-func (t *Template) RenderPartial(w io.Writer, name string, data interface{}) error {
-	return t.templates.ExecuteTemplate(w, name, data)
+	res := t.ExecuteTemplate(w, "layout.go.html", data)
+	log.Printf("rendered %s", pageName)
+	return res
 }

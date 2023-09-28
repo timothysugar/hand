@@ -14,6 +14,8 @@ const (
 	smallBlind = 1
 )
 
+var source = rand.NewSource(time.Now().UnixNano())
+
 func TestPenultimatePlayerFolds(t *testing.T) {
 	th := createMinimalHand(t)
 
@@ -89,7 +91,7 @@ func TestHandRequiresTwoPlayers(t *testing.T) {
 	p1 := createPlayer()
 	players := []*Player{p1}
 
-	_, err := NewHand(players, p1)
+	_, err := NewHand(players, p1, source)
 
 	if err == nil {
 		t.Error("New hand with less than one player should return error but did not")
@@ -111,7 +113,7 @@ func TestPlayerCanJoinAHand(t *testing.T) {
 	p1 := createPlayer()
 	p2 := createPlayer()
 	players := []*Player{p1, p2}
-	h, err := NewHand(players, p1)
+	h, err := NewHand(players, p1, source)
 	if err != nil {
 		t.Error(err)
 	}
@@ -127,7 +129,7 @@ func TestPlayerJoiningAHandWithADuplicateNameReturnsError(t *testing.T) {
 	p1 := createPlayer()
 	p2 := createPlayer()
 	players := []*Player{p1, p2}
-	h, err := NewHand(players, p1)
+	h, err := NewHand(players, p1, source)
 	if err != nil {
 		t.Error(err)
 	}
@@ -150,7 +152,7 @@ func TestAllPlayersCallTheBlind(t *testing.T) {
 	players := []*Player{p1, p2, p3}
 
 	var err error
-	h, err := NewHand(players, p1, smallBlind, bigBlind)
+	h, err := NewHand(players, p1, source, smallBlind, bigBlind)
 	if err != nil {
 		t.Error(err)
 	}
@@ -210,7 +212,7 @@ func TestOneFoldsAndOneCallsBlind(t *testing.T) {
 	p3 := createPlayer()
 	players := []*Player{p1, p2, p3}
 	var err error
-	h, err := NewHand(players, p1, smallBlind)
+	h, err := NewHand(players, p1, source, smallBlind)
 	if err != nil {
 		t.Error(err)
 	}
@@ -255,7 +257,7 @@ func TestOneFoldsAndOneChecksBlind(t *testing.T) {
 	players := []*Player{p1, p2, p3}
 
 	var err error
-	h, err := NewHand(players, p1, smallBlind)
+	h, err := NewHand(players, p1, source, smallBlind)
 	if err != nil {
 		t.Error(err)
 	}
@@ -316,7 +318,7 @@ func TestBlindsPlayedFromDealer(t *testing.T) {
 	p1 := createPlayer()
 	p2 := createPlayer()
 	players := []*Player{p1, p2} // p2 is not the first in order
-	h, err := NewHand(players, p2, smallBlind)
+	h, err := NewHand(players, p2, source, smallBlind)
 	if err != nil {
 		t.Error(err)
 	}
@@ -355,7 +357,7 @@ func TestSecondCallInWrongOrderReturnsError(t *testing.T) {
 	p2 := createPlayer()
 	p3 := createPlayer()
 	players := []*Player{p1, p2, p3}
-	h, _ := NewHand(players, p1, smallBlind)
+	h, _ := NewHand(players, p1, source, smallBlind)
 	h.Begin()
 
 	if err := playBlind(h, p1); err != nil {
@@ -571,7 +573,7 @@ func TestNoValidMovesBeforeGameBegins(t *testing.T) {
 	p1 := createPlayer()
 	p2 := createPlayer()
 	players := []*Player{p1, p2}
-	h, _ := NewHand(players, p1)
+	h, _ := NewHand(players, p1, source)
 
 	got := h.ValidMoves()
 
@@ -605,7 +607,7 @@ func TestIsNextToPlayReturnsFalseBeforeGameBegins(t *testing.T) {
 	p1 := createPlayer()
 	p2 := createPlayer()
 	players := []*Player{p1, p2}
-	h, err := NewHand(players, p1)
+	h, err := NewHand(players, p1, source)
 	if err != nil {
 		t.Error(err)
 	}
@@ -649,7 +651,7 @@ func TestIsActiveReturnsFalseBeforeGameBegins(t *testing.T) {
 	p1 := createPlayer()
 	p2 := createPlayer()
 	players := []*Player{p1, p2}
-	h, err := NewHand(players, p1)
+	h, err := NewHand(players, p1, source)
 	if err != nil {
 		t.Error(err)
 	}
@@ -690,7 +692,7 @@ func createMinimalHand(t *testing.T) testHand {
 	p1 := createPlayer()
 	p2 := createPlayer()
 	players := []*Player{p1, p2}
-	h, err := NewHand(players, p1)
+	h, err := NewHand(players, p1, source)
 	if err != nil {
 		t.Error(err)
 	}
@@ -706,7 +708,7 @@ func createMinimalHandWithBlind(t *testing.T) testHand {
 	p1 := createPlayer()
 	p2 := createPlayer()
 	players := []*Player{p1, p2}
-	h, err := NewHand(players, p1, smallBlind)
+	h, err := NewHand(players, p1, source, smallBlind)
 	if err != nil {
 		t.Error(err)
 	}

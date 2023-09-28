@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -37,8 +39,7 @@ const (
 )
 
 var h *hand.Hand
-var me *hand.Player
-var ts *templates.Template
+var zephyr *hand.Player
 
 var sessionStore *sessions.CookieStore
 var pStore *playerStore = &playerStore{players: make(map[string]*hand.Player)}
@@ -76,7 +77,6 @@ func (ps *playerStore) Get(id string) *hand.Player {
 
 func init() {
 	log.Println("Initializing hand")
-	ts = templates.New()
 	sessionsKey := os.Getenv("SESSION_KEY")
 	var err error
 	sessionStore = sessions.NewCookieStore([]byte(sessionsKey))
@@ -86,25 +86,25 @@ func init() {
 
 	bill := hand.NewPlayer("Bill", initialChips)
 	bill.Cards = []hand.Card{
-		{Suit: "Spades", Rank: "Ace"},
-		{Suit: "Clubs", Rank: "Ace"},
+		{Suit: hand.Spades, Rank: hand.Ace},
+		{Suit: hand.Clubs, Rank: hand.Ace},
 	}
 	ben := hand.NewPlayer("Ben", initialChips)
 	ben.Cards = []hand.Card{
-		{Suit: "Hearts", Rank: "Ace"},
-		{Suit: "Diamonds", Rank: "Ace"},
+		{Suit: hand.Hearts, Rank: hand.Ace},
+		{Suit: hand.Diamonds, Rank: hand.Ace},
 	}
-	me = hand.NewPlayer("Zephyr", initialChips)
-	me.Cards = []hand.Card{
-		{Suit: "Hearts", Rank: "10"},
-		{Suit: "Diamonds", Rank: "9"},
+	zephyr = hand.NewPlayer("Zephyr", initialChips)
+	zephyr.Cards = []hand.Card{
+		{Suit: hand.Hearts, Rank: hand.Ten},
+		{Suit: hand.Diamonds, Rank: hand.Nine},
 	}
 	players := []*hand.Player{
 		bill,
 		ben,
-		me,
+		zephyr,
 	}
-	h, err = hand.NewHand(players, players[2], 10)
+	h, err = hand.NewHand(players, players[2], rand.NewSource(time.Now().UnixNano()), 10)
 	if err != nil {
 		log.Fatalf("Error initializing hand: %s", err)
 	}
@@ -188,7 +188,7 @@ func main() {
 
 func signupHandler(w http.ResponseWriter, req *http.Request) {
 	tmpl := "signup.go.html"
-	err := ts.Render(w, tmpl, nil)
+	err := templates.RenderPage(w, tmpl, nil)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s", err, tmpl)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -314,7 +314,7 @@ func createHandsViewModel(player *hand.Player, hands []*hand.Hand) HandsViewMode
 		}
 	}
 	return HandsViewModel{
-		Name:         me.Name,
+		Name:         zephyr.Name,
 		TableId:      tableId,
 		HandListings: hs,
 	}
@@ -331,7 +331,7 @@ func getHandsHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	vm := createHandsViewModel(p, hands)
 	tmpl := "hands.go.html"
-	err = ts.Render(w, tmpl, vm)
+	err = templates.RenderPage(w, tmpl, vm)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s", err, tmpl)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -382,7 +382,7 @@ func getHandHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	tmpl := "hand.go.html"
-	err = ts.Render(w, tmpl, vm)
+	err = templates.RenderPage(w, tmpl, vm)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, tmpl, vm)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -418,8 +418,8 @@ func beginHandHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tmpl := "hand"
-	err = ts.RenderPartial(w, tmpl, vm)
+	tmpl := "activeHand"
+	err = templates.RenderFragment(w, tmpl, vm)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, tmpl, vm)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -446,14 +446,14 @@ func blindHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	vm := createPlayerViewModel(me, tableId, handId)
+	vm := createPlayerViewModel(zephyr, tableId, handId)
 	if err != nil {
 		log.Printf("Error creating hand view model for request with URL:%s, %v\n", req.URL, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	tmpl := "player.go.html"
-	err = ts.Render(w, tmpl, vm)
+	tmpl := "player"
+	err = templates.RenderFragment(w, tmpl, vm)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, tmpl, vm)
 		w.WriteHeader(http.StatusInternalServerError)
