@@ -98,6 +98,17 @@ func TestHandRequiresTwoPlayers(t *testing.T) {
 	}
 }
 
+func TestHandWithDuplicatePlayerReturnsError(t *testing.T) {
+	p1 := createPlayer()
+	players := []*Player{p1, p1}
+
+	_, err := NewHand(players, p1, source)
+
+	if err == nil {
+		t.Error("New hand with duplicate player should return error but did not")
+	}
+}
+
 func TestPlayerNotInHandCannotPlayMove(t *testing.T) {
 	th := createMinimalHand(t)
 

@@ -37,9 +37,11 @@ func NewHand(ps []*Player, dealer *Player, source rand.Source, blinds ...int) (*
 	// TODO: validate dealer is in ps
 	// TODO: validate blinds are positive
 	// TODO: validate blinds are less than or equal to the number of players
-	ch := make(chan FinishedHand, 1)
 	if len(ps) <= 1 {
 		return nil, errors.New("hand requires at least 2 players")
+	}
+	if err := checkDuplicatePlayers(ps); err != nil {
+		return nil, err
 	}
 
 	var dIdx int
@@ -55,7 +57,24 @@ func NewHand(ps []*Player, dealer *Player, source rand.Source, blinds ...int) (*
 	if err != nil {
 		return nil, err
 	}
+	ch := make(chan FinishedHand, 1)
 	return &Hand{Id: id, players: sortedPs, pot: newPot(), deck: newDeck(source), dealer: dealer, stage: state, finished: ch}, nil
+}
+
+func checkDuplicatePlayers(players []*Player) error {
+	inResult := make(map[*Player]bool)
+	var result []*Player
+    for _, p := range players {
+        if _, ok := inResult[p]; !ok {
+            inResult[p] = true
+        } else {
+            result = append(result, p)
+		}
+    }
+	if len(result) > 0 {
+		return errors.New(fmt.Sprintf("duplicate players: %v", result))
+	}
+	return nil
 }
 
 // Begin begins the hand and returns a channel into which the hand result will be sent when the hand is finished.
@@ -72,6 +91,8 @@ func (h *Hand) IsActive() bool {
 }
 
 // Join adds a player to the hand. If the hand has already begun, an error is returned.
+//
+// Deprecated: Just construct a hand with all players. Manage joining a "table" outside of the hand.
 func (h *Hand) Join(player *Player, chips int) error {
 	for _, v := range h.players {
 		if v.Name == player.Name {

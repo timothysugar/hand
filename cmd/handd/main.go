@@ -35,7 +35,7 @@ type ctxKey string
 const (
 	initialChips            = 1000
 	tableId                 = "table1"
-	playerSessionKey ctxKey = "playerSession"
+	playerSessionKey ctxKey = "player"
 )
 
 var h *hand.Hand
