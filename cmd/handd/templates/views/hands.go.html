@@ -2,7 +2,7 @@
 
 {{define "content"}}
 <header>
-  <h1>Hands</h1>
+  <h1>Tables</h1>
 </header>
 <main>
   <div>
@@ -10,6 +10,8 @@
       {{ range . }}<li><a href="{{ . }}">{{ . }}</a></li>{{ end }}
     </ul>
   </div>
-  {{ end }}
+  <button
+      hx-post="/table"
+  >Add table</button>
 </main>
-<footer>Source at <a href='https://github.com/timothysugar/hand'>Github</a></footer>
+{{ end }}

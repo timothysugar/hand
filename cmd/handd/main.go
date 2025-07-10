@@ -1,12 +1,16 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
+	"github.com/go-faker/faker/v4"
 	"github.com/gorilla/mux"
+	"github.com/rs/xid"
 	"github.com/timothysugar/hand/cmd/handd/templates"
 	"github.com/timothysugar/hand/pkg/hand"
 )
@@ -18,10 +22,36 @@ type PlayerViewModel struct {
 }
 
 const (
-	initialChips = 1000
-	tableId	  = "table1"
+	initialChips      = 1000
+	initialTableCount = 3
+	tableId           = "table1"
+	playerLimit       = 8
 )
 
+type GameState int
+
+const (
+	Lobby GameState = iota
+	ActiveHand
+)
+
+type Table struct {
+	Id      string
+	Name    string
+	players Players
+	Status  GameState
+}
+
+func NewTable(name string) Table {
+	return Table{
+		Id:      xid.New().String(),
+		Name:    name,
+		players: NewPlayers(playerLimit),
+		Status:  Lobby,
+	}
+}
+
+var tables []Table = make([]Table, 0)
 var h *hand.Hand
 var me *hand.Player
 var ts *templates.Template
@@ -29,6 +59,9 @@ var ts *templates.Template
 func init() {
 	log.Println("Initializing hand")
 	ts = templates.New()
+	for i := 0; i < initialTableCount; i++ {
+		tables = append(tables, NewTable(fmt.Sprintf("table%d", i)))
+	}
 
 	bill := hand.NewPlayer("Bill", initialChips)
 	bill.Cards = []hand.Card{
@@ -58,40 +91,68 @@ func init() {
 	}
 }
 
-func main() {
+func serve() error {
 	r := mux.NewRouter()
+	assetsPath := "cmd/handd/static"
+	listed, _ := os.ReadDir(assetsPath)
+	log.Printf("listing dir %s: %v", assetsPath, listed)
+	assets := http.Dir(assetsPath)
+	log.Printf("found assets %v", assets)
+	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets", http.FileServer(assets)))
 	r.HandleFunc("/table/{tableId}/hand/{handId}", getHandHandler).Name("get-hand").Methods("GET")
 	r.HandleFunc("/hand/{handId}/player/{playerId}/moves/Blind/{amount}", blindHandler).Name("play-blind").Methods("POST")
-	r.HandleFunc("/", getHandsHandler).Name("get-hands").Methods("GET")
+	r.HandleFunc("/", getTablesHandler).Name("get-hands").Methods("GET")
+	r.HandleFunc("/table", newTableHandler).Name(("new-table")).Methods("POST")
 	r.HandleFunc("/table/{tableId}", getHandHandler).Name("get-game").Methods("GET")
 
-	port := ":8090"
-	fmt.Printf("listening on %s", port)
-	http.ListenAndServe(port, r)
+	port := ":8070"
+	fmt.Printf("listening at http://localhost%s\n", port)
+	return http.ListenAndServe(port, r)
+}
+
+func main() {
+	renderTemplateCmd := flag.NewFlagSet("tmpl", flag.ExitOnError)
+	renderTemplateCmd.Usage = func() { fmt.Printf("render a named template to an HTML output file\n") }
+	renderTemplateCmd.String("name", "", "template name to render")
+
+	flag.Parse()
+	flag.PrintDefaults()
+	if len(os.Args) < 2 {
+		log.Println("running game server")
+		if err := serve(); err != nil {
+			log.Fatalf("unexpected error running game serving so exiting: %s", err)
+		}
+		os.Exit(0)
+	}
+	switch os.Args[1] {
+	case "tmpl":
+		renderTemplateCmd.Parse(os.Args[2:])
+		log.Println("rendering template")
+		os.Exit(0)
+	default:
+		log.Fatalf("unexpected subcommand in first argument")
+	}
 }
 
 func createPlayerViewModel(self *hand.Player, tableId string, handId string) templates.PlayerViewModel {
 	allMoves := h.ValidMoves()
 	mvs := allMoves[self.Id]
 	return templates.PlayerViewModel{
-		Id:     self.Id,
+		Id:      self.Id,
 		TableId: tableId,
-		HandId: handId,
+		HandId:  handId,
 		Entrant: templates.Entrant{
 			Name:   me.Name,
-			Chips: me.Chips,
+			Chips:  me.Chips,
 			Folded: me.Folded,
 		},
-		Cards:  self.Cards,
-		Moves:  mvs,
+		Cards: self.Cards,
+		Moves: mvs,
 	}
 }
 
 func createHandViewModel(playerId string, tableId string, handId string) (templates.HandViewModel, error) {
-	self, opponents, err := h.Players(playerId)
-	if err != nil {
-		return templates.HandViewModel{}, err
-	}
+	self, opponents := h.Players(playerId)
 	opponentsVM := make([]templates.OpponentViewModel, len(opponents))
 	for i, o := range opponents {
 		opponentsVM[i] = templates.OpponentViewModel{
@@ -114,13 +175,12 @@ func createHandViewModel(playerId string, tableId string, handId string) (templa
 	}, nil
 }
 
-func getHandsHandler(w http.ResponseWriter, req *http.Request) {
-	handIds := []string{ h.Id }
-	var links = make([]string, len(handIds))
-	for i, v := range handIds {
-		links[i] = fmt.Sprintf("/table/%s/hand/%s", tableId, v)
+func getTablesHandler(w http.ResponseWriter, req *http.Request) {
+	var links = make([]string, len(tables))
+	for i, v := range tables {
+		links[i] = fmt.Sprintf("/table/%s/hand/%s", tableId, v.Id)
 	}
-	
+
 	name := "hands.go.html"
 	err := ts.Render(w, name, links)
 	if err != nil {
@@ -130,7 +190,32 @@ func getHandsHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func newTableHandler(w http.ResponseWriter, req *http.Request) {
+	tables = append(tables, NewTable(faker.Name()))
+}
+
 func getHandHandler(w http.ResponseWriter, req *http.Request) {
+	pathVars := mux.Vars(req)
+	tableId := pathVars["tableId"]
+	handId := pathVars["handId"]
+
+	vm, err := createHandViewModel(me.Id, tableId, handId)
+	if err != nil {
+		log.Printf("Error creating hand view model for request with URL:%s, %v\n", req.URL, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	name := "hand.go.html"
+	err = ts.Render(w, name, vm)
+	if err != nil {
+		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, name, vm)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func watchHandHandler(w http.ResponseWriter, req *http.Request) {
 	pathVars := mux.Vars(req)
 	tableId := pathVars["tableId"]
 	handId := pathVars["handId"]
@@ -171,10 +256,6 @@ func blindHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	vm := createPlayerViewModel(me, tableId, handId)
-	if err != nil {
-		log.Printf("Error creating hand view model for request with URL:%s, %v\n", req.URL, err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
 
 	name := "player.go.html"
 	err = ts.Render(w, name, vm)

@@ -1,0 +1,22 @@
+{{template "layout.go.html" . }}
+
+{{define "content"}}
+<header>
+    <h1><a href='/table/{{.TableId}}'>Table</a></h1>
+</header>
+<main>
+    <div>
+        <h2>Players</h2>
+        {{ range .Players }}
+        <div class="opponent">
+            <h4>{{ .Name }}</h2>
+                <p>Chips: {{ .Chips }}</p>
+                <p>Bet: {{ .Bet }}</p>
+                {{ range .FaceDownCards }}
+                <span>face down card</span>
+                {{ end }}
+        </div>
+        {{ end }}
+    </div>
+</main>
+{{ end }}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -33,7 +34,10 @@ func main() {
 		os.Exit(1)
 	}
 	go func() {
-		fin = h.Begin()
+		fin, err = h.Begin()
+		if err != nil {
+			log.Fatalf("Error initializing hand: %s", err)
+		}
 	}()
 	ls := play(os.Stdin, h)
 
