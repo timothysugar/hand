@@ -76,7 +76,7 @@ func init() {
 	me = hand.NewPlayer("Zephyr", initialChips)
 	me.Cards = []hand.Card{
 		{Suit: "Hearts", Rank: "10"},
-		{Suit: "Diamonds", Rank: "9"},
+		{Suit: "Diamonds", Rank: "Queen"},
 	}
 	players := []*hand.Player{
 		bill,
@@ -134,9 +134,83 @@ func main() {
 	}
 }
 
+var classSuffixLookup = map[hand.Card]string{
+	{Rank: "Ace", Suit: "Clubs"}:      "ac",
+	{Rank: "2", Suit: "Clubs"}:        "2c",
+	{Rank: "3", Suit: "Clubs"}:        "3c",
+	{Rank: "4", Suit: "Clubs"}:        "4c",
+	{Rank: "5", Suit: "Clubs"}:        "5c",
+	{Rank: "6", Suit: "Clubs"}:        "6c",
+	{Rank: "7", Suit: "Clubs"}:        "7c",
+	{Rank: "8", Suit: "Clubs"}:        "8c",
+	{Rank: "9", Suit: "Clubs"}:        "9c",
+	{Rank: "10", Suit: "Clubs"}:       "10c",
+	{Rank: "Jack", Suit: "Clubs"}:     "jc",
+	{Rank: "Queen", Suit: "Clubs"}:    "qc",
+	{Rank: "King", Suit: "Clubs"}:     "kc",
+	{Rank: "Ace", Suit: "Diamonds"}:   "ad",
+	{Rank: "2", Suit: "Diamonds"}:     "2d",
+	{Rank: "3", Suit: "Diamonds"}:     "3d",
+	{Rank: "4", Suit: "Diamonds"}:     "4d",
+	{Rank: "5", Suit: "Diamonds"}:     "5d",
+	{Rank: "6", Suit: "Diamonds"}:     "6d",
+	{Rank: "7", Suit: "Diamonds"}:     "7d",
+	{Rank: "8", Suit: "Diamonds"}:     "8d",
+	{Rank: "9", Suit: "Diamonds"}:     "9d",
+	{Rank: "10", Suit: "Diamonds"}:    "10d",
+	{Rank: "Jack", Suit: "Diamonds"}:  "jd",
+	{Rank: "Queen", Suit: "Diamonds"}: "qd",
+	{Rank: "King", Suit: "Diamonds"}:  "kd",
+	{Rank: "Ace", Suit: "Hearts"}:     "ah",
+	{Rank: "2", Suit: "Hearts"}:       "2h",
+	{Rank: "3", Suit: "Hearts"}:       "3h",
+	{Rank: "4", Suit: "Hearts"}:       "4h",
+	{Rank: "5", Suit: "Hearts"}:       "5h",
+	{Rank: "6", Suit: "Hearts"}:       "6h",
+	{Rank: "7", Suit: "Hearts"}:       "7h",
+	{Rank: "8", Suit: "Hearts"}:       "8h",
+	{Rank: "9", Suit: "Hearts"}:       "9h",
+	{Rank: "10", Suit: "Hearts"}:      "10h",
+	{Rank: "Jack", Suit: "Hearts"}:    "jh",
+	{Rank: "Queen", Suit: "Hearts"}:   "qh",
+	{Rank: "King", Suit: "Hearts"}:    "kh",
+	{Rank: "Ace", Suit: "Spades"}:     "as",
+	{Rank: "2", Suit: "Spades"}:       "2s",
+	{Rank: "3", Suit: "Spades"}:       "3s",
+	{Rank: "4", Suit: "Spades"}:       "4s",
+	{Rank: "5", Suit: "Spades"}:       "5s",
+	{Rank: "6", Suit: "Spades"}:       "6s",
+	{Rank: "7", Suit: "Spades"}:       "7s",
+	{Rank: "8", Suit: "Spades"}:       "8s",
+	{Rank: "9", Suit: "Spades"}:       "9s",
+	{Rank: "10", Suit: "Spades"}:      "10s",
+	{Rank: "Jack", Suit: "Spades"}:    "js",
+	{Rank: "Queen", Suit: "Spades"}:   "qs",
+	{Rank: "King", Suit: "Spades"}:    "ks",
+}
+
+func makeCardClass(card hand.Card) string {
+	suffix := classSuffixLookup[card]
+	log.Printf("finding the class suffix for card %v: %s", card, suffix)
+	return fmt.Sprintf("pcard-%s", suffix)
+}
+
 func createPlayerViewModel(self *hand.Player, tableId string, handId string) templates.PlayerViewModel {
 	allMoves := h.ValidMoves()
 	mvs := allMoves[self.Id]
+	cardsVM := make([]struct {
+		Card  hand.Card
+		Class string
+	}, len(self.Cards))
+	for i, c := range self.Cards {
+		cardsVM[i] = struct {
+			Card  hand.Card
+			Class string
+		}{
+			c,
+			makeCardClass(c),
+		}
+	}
 	return templates.PlayerViewModel{
 		Id:      self.Id,
 		TableId: tableId,
@@ -146,7 +220,7 @@ func createPlayerViewModel(self *hand.Player, tableId string, handId string) tem
 			Chips:  me.Chips,
 			Folded: me.Folded,
 		},
-		Cards: self.Cards,
+		Cards: cardsVM,
 		Moves: mvs,
 	}
 }
