@@ -91,16 +91,14 @@ func init() {
 	}
 }
 
+const assetsPath = "cmd/handd/static"
+
 func serve() error {
 	r := mux.NewRouter()
-	assetsPath := "cmd/handd/static"
-	listed, _ := os.ReadDir(assetsPath)
-	log.Printf("listing dir %s: %v", assetsPath, listed)
 	assets := http.Dir(assetsPath)
-	log.Printf("found assets %v", assets)
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets", http.FileServer(assets)))
 	r.HandleFunc("/table/{tableId}/hand/{handId}", getHandHandler).Name("get-hand").Methods("GET")
-	r.HandleFunc("/hand/{handId}/player/{playerId}/moves/Blind/{amount}", blindHandler).Name("play-blind").Methods("POST")
+	r.HandleFunc("/hand/{handId}/player/{playerId}/move", moveHandler).Name("play-move").Methods("POST")
 	r.HandleFunc("/", getTablesHandler).Name("get-hands").Methods("GET")
 	r.HandleFunc("/table", newTableHandler).Name(("new-table")).Methods("POST")
 	r.HandleFunc("/table/{tableId}", getHandHandler).Name("get-game").Methods("GET")
@@ -191,7 +189,6 @@ var classSuffixLookup = map[hand.Card]string{
 
 func makeCardClass(card hand.Card) string {
 	suffix := classSuffixLookup[card]
-	log.Printf("finding the class suffix for card %v: %s", card, suffix)
 	return fmt.Sprintf("pcard-%s", suffix)
 }
 
@@ -215,22 +212,23 @@ func createPlayerViewModel(self *hand.Player, tableId string, handId string) tem
 		Id:      self.Id,
 		TableId: tableId,
 		HandId:  handId,
-		Entrant: templates.Entrant{
+		EntrantViewModel: templates.EntrantViewModel{
 			Name:   me.Name,
 			Chips:  me.Chips,
 			Folded: me.Folded,
+			Active: h.IsNextToPlay(self.Id),
 		},
 		Cards: cardsVM,
 		Moves: mvs,
 	}
 }
 
-func createHandViewModel(playerId string, tableId string, handId string) (templates.HandViewModel, error) {
+func createHandViewModel(playerId string, tableId string, handId string) templates.HandViewModel {
 	self, opponents := h.Players(playerId)
 	opponentsVM := make([]templates.OpponentViewModel, len(opponents))
 	for i, o := range opponents {
 		opponentsVM[i] = templates.OpponentViewModel{
-			Entrant: templates.Entrant{
+			EntrantViewModel: templates.EntrantViewModel{
 				Name:   o.Name,
 				Chips:  o.Chips,
 				Folded: o.Folded,
@@ -246,7 +244,7 @@ func createHandViewModel(playerId string, tableId string, handId string) (templa
 		TableId:   tableId,
 		Opponents: opponentsVM,
 		Player:    playerVM,
-	}, nil
+	}
 }
 
 func getTablesHandler(w http.ResponseWriter, req *http.Request) {
@@ -273,15 +271,10 @@ func getHandHandler(w http.ResponseWriter, req *http.Request) {
 	tableId := pathVars["tableId"]
 	handId := pathVars["handId"]
 
-	vm, err := createHandViewModel(me.Id, tableId, handId)
-	if err != nil {
-		log.Printf("Error creating hand view model for request with URL:%s, %v\n", req.URL, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	vm := createHandViewModel(me.Id, tableId, handId)
 
 	name := "hand.go.html"
-	err = ts.Render(w, name, vm)
+	err := ts.Render(w, name, vm)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, name, vm)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -294,15 +287,10 @@ func watchHandHandler(w http.ResponseWriter, req *http.Request) {
 	tableId := pathVars["tableId"]
 	handId := pathVars["handId"]
 
-	vm, err := createHandViewModel(me.Id, tableId, handId)
-	if err != nil {
-		log.Printf("Error creating hand view model for request with URL:%s, %v\n", req.URL, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	vm := createHandViewModel(me.Id, tableId, handId)
 
 	name := "hand.go.html"
-	err = ts.Render(w, name, vm)
+	err := ts.Render(w, name, vm)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, name, vm)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -310,28 +298,44 @@ func watchHandHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func blindHandler(w http.ResponseWriter, req *http.Request) {
+func moveHandler(w http.ResponseWriter, req *http.Request) {
+	if err := req.ParseForm(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	pathVars := mux.Vars(req)
 	tableId := pathVars["tableId"]
 	handId := pathVars["handId"]
 	playerId := pathVars["playerId"]
-	amount := pathVars["amount"]
-
-	v, err := strconv.Atoi(amount)
-	if err != nil {
-		log.Printf("Error converting amount to int: %s\n", amount)
+	if !req.PostForm.Has("action") {
+		log.Printf("Required form value 'action' missing: %s", req.PostForm)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if err := h.PlayBlind(playerId, v); err != nil {
+	action := req.PostForm.Get("action")
+	bet := req.PostForm.Get("bet")
+	amount, err := strconv.Atoi(bet)
+	if err != nil {
+		log.Printf("Value of 'bet' must be an integer but was not: %s", bet)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if action != "Blind" {
+		log.Printf("Unsupported action: %s", action)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err := h.PlayBlind(playerId, amount); err != nil {
 		log.Printf("Error playing blind: %v\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	vm := createPlayerViewModel(me, tableId, handId)
+	vm := createHandViewModel(playerId, tableId, handId)
 
-	name := "player.go.html"
+	name := "hand.go.html"
 	err = ts.Render(w, name, vm)
 	if err != nil {
 		log.Printf("Error rendering template, err: %v, template name: %s, data: %v", err, name, vm)

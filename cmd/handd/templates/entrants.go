@@ -6,7 +6,7 @@ type PlayerViewModel struct {
 	Id      string
 	TableId string
 	HandId  string
-	Entrant
+	EntrantViewModel
 	Cards []struct {
 		Card  hand.Card
 		Class string
@@ -15,11 +15,11 @@ type PlayerViewModel struct {
 }
 
 type OpponentViewModel struct {
-	Entrant
+	EntrantViewModel
 	FaceDownCards []struct{}
 }
 
-type Entrant struct {
+type EntrantViewModel struct {
 	Name   string
 	Chips  int
 	Bet    int

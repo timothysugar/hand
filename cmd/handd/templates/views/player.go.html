@@ -1,31 +1,19 @@
 {{$handId := .HandId}}
 {{$playerId := .Id}}
-<div id="player">
+{{ $createMoveUrl := printf "%s%s%s%s%s" "/hand/" $handId "/player/" $playerId "/move"}}
+<div class="self player {{ if .Active}} active{{end}}">
   <h4>{{ .Name }}</h2>
     <p>Chips: {{ .Chips }}</p>
     <div class="bet">
-      {{ $createMoveUrl := printf "%s%s%s%s%s" "/hand/" $handId "/player/" $playerId "/moves/"}}
       {{ range .Moves }}
-      <button class="btn" hx-post="{{ $createMoveUrl }}{{ .Action }}{{if .Bet.Minimum}}/{{.Bet.Minimum}}{{end}}"
-        hx-target="#player" hx-swap="outerHTML">
+      <form>
+        <input name="action" hidden value="{{ .Action }}" />
+        <input name="bet" hidden value="{{if .Bet.Minimum}}{{.Bet.Minimum}}{{end}}" />
+        <button hx-post="{{ $createMoveUrl }}" hx-target=".main-content" hx-swap="outerHTML">
         {{.Action }}{{if .Bet.Minimum}} ({{.Bet.Minimum}}){{end}}
-      </button>
+        </button>
+      </form>
       {{ end }}
-      <!-- <form hx-post="/contact/1" hx-target="this" hx-swap="outerHTML">
-      <div class="form-group fold">
-        <input type="text" name="firstName" value="Joe">
-      </div>
-      <div class="form-group">
-        <label>Last Name</label>
-        <input type="text" name="lastName" value="Blow">
-      </div>
-      <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" name="email" value="joe@blow.com">
-      </div>
-      <button class="btn">Submit</button>
-      <button class="btn" hx-get="/contact/1">Cancel</button>
-    </form> -->
     </div>
     {{ range .Cards }}
     <span class="{{ .Class }}"></span>

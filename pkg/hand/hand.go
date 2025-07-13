@@ -58,9 +58,9 @@ func NewHand(ps []*Player, dealer *Player, blinds ...int) (*Hand, error) {
 
 // Begin begins the hand and returns a channel into which the hand result will be sent when the hand is finished.
 func (h *Hand) Begin() (chan FinishedHand, error) {
-	if (h.IsActive()) {
+	if h.IsActive() {
 		return nil, errors.New("hand already active so cannot begin")
-	}	
+	}
 	h.playFromDealer()
 	return h.finished, nil
 }

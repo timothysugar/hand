@@ -724,10 +724,10 @@ func createPlayer() *Player {
 }
 
 func randomString(length int) string {
-    r := rand.New(rand.NewSource(time.Now().UnixNano()))
-    b := make([]byte, length+2)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length+2)
 	r.Read(b)
-    return fmt.Sprintf("%x", b)[2 : length+2]
+	return fmt.Sprintf("%x", b)[2 : length+2]
 }
 
 func playBlind(h *Hand, p *Player) error {

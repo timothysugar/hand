@@ -1,12 +1,14 @@
 {{ define "opponentPositions" }}
+<ol>
 {{ range . }}
-<div class="opponent {{ if .Active}} active{{end}}">
+<li class="opponent player{{ if .Active}} active{{end}}">
         <h4>{{ .Name }}</h4>
                 <p>Chips: {{ .Chips }}</p>
                 <p>Bet: {{ .Bet }}</p>
                 {{ range .FaceDownCards }}
         <span class="pcard-back"></span>
                 {{ end }}
-</div>
+</li>
 {{ end }}
+</ol>
 {{ end }}

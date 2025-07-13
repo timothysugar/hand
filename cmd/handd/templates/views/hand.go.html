@@ -4,14 +4,14 @@
 <header>
   <h1><a href='/table/{{.TableId}}/hand/{{.HandId}}'>Hand</a></h1>
 </header>
-<main>
-  <div>
+<main class="main-content">
+  <div class="opponents">
     <h2>Opponents</h2>
     {{ template "opponentPositions" .Opponents }}
   </div>
-  <div>
+  <footer class="self player">
     <h2>Player</h2>
     {{ template "player.go.html" .Player }}
-  </div>
+  </footer>
 </main>
 {{ end }}
