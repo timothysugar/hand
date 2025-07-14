@@ -98,7 +98,7 @@ func serve() error {
 	assets := http.Dir(assetsPath)
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets", http.FileServer(assets)))
 	r.HandleFunc("/table/{tableId}/hand/{handId}", getHandHandler).Name("get-hand").Methods("GET")
-	r.HandleFunc("/hand/{handId}/player/{playerId}/move", moveHandler).Name("play-move").Methods("POST")
+	r.HandleFunc("/table/{tableId}/hand/{handId}/player/{playerId}/move", moveHandler).Name("play-move").Methods("POST")
 	r.HandleFunc("/", getTablesHandler).Name("get-hands").Methods("GET")
 	r.HandleFunc("/table", newTableHandler).Name(("new-table")).Methods("POST")
 	r.HandleFunc("/table/{tableId}", getHandHandler).Name("get-game").Methods("GET")

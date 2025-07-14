@@ -1,6 +1,7 @@
 {{$handId := .HandId}}
 {{$playerId := .Id}}
-{{ $createMoveUrl := printf "%s%s%s%s%s" "/hand/" $handId "/player/" $playerId "/move"}}
+{{$tableId := .TableId}}
+{{ $createMoveUrl := printf "%s%s%s%s%s%s%s" "/table/" $tableId "/hand/" $handId "/player/" $playerId "/move"}}
 <div class="self player {{ if .Active}} active{{end}}">
   <h4>{{ .Name }}</h2>
     <p>Chips: {{ .Chips }}</p>
